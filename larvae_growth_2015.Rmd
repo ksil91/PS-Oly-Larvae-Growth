@@ -1,0 +1,124 @@
+---
+title: "Puget Sound Larvae Growth"
+output:
+  html_notebook:
+    fig_height: 3
+    fig_width: 4
+  html_document: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+##
+
+References
+http://www.flutterbys.com.au/stats/tut/tut9.2a.html
+http://rcompanion.org/rcompanion/d_07.html
+
+```{r}
+library(dplyr)
+library(nlme)
+```
+```{r}
+setwd("~/Projects/CommonG/Analysis/Phenotype/Larvae/")
+all.larvae <- read.csv("../../../Data/P.S. Larvae Sizing - Sheet1.csv",header = TRUE, na.strings = "#DIV/0!")
+head(all.larvae)
+```
+```{r}
+G1.larvae <- filter(all.larvae, Growth.1.or.2 == 1)
+G1.larvae <- select(G1.larvae, Population, Replicate,Date,K.Average.length,Include,Area,Scale,Janky)
+G1.78.715_byrep <- group_by(filter(G1.larvae, Date == "7-8-15" | Date == "7-15-15", Include == "y"),Population,Replicate)
+G1.78.715_byrep <- droplevels(G1.78.715_byrep)
+G1.78.715_byrep
+```
+```{r}
+G1.715_byrep <- filter(G1.78.715_byrep,Date == "7-15-15")
+G1.715_byrep
+```
+
+```{r}
+G1_byrep_mean.78 <- summarise(filter(G1.78.715_byrep,Date == "7-8-15"),mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
+G1_byrep_mean.78
+boxplot(mean.length~Population, G1_byrep_mean.78,main = "G1 Day 7 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(mean.area~Population, G1_byrep_mean.78,main = "G1 Day 7 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+```
+
+
+```{r}
+G1_byrep_mean.715 <- summarise(G1.715_byrep,mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
+G1_byrep_mean.715
+boxplot(mean.length~Population, G1_byrep_mean.715,main = "G1 Day 14 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(mean.area~Population, G1_byrep_mean.715,main = "G1 Day 14 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+```
+```{r}
+#clunky way to do it probably
+growth.length = numeric(length = nrow(G1.715_byrep))
+growth.area = numeric(length = nrow(G1.715_byrep))
+for(m in 1:nrow(G1_byrep_mean.78)){
+  for(r in 1:nrow(G1.715_byrep)){
+    if(G1_byrep_mean.78$Replicate[m] %in% G1.715_byrep$Replicate[r]){
+      growth.length[r] <- (G1.715_byrep$K.Average.length[r] - G1_byrep_mean.78$mean.length[m])/7
+      growth.area[r] <- (G1.715_byrep$Area[r] - G1_byrep_mean.78$mean.area[m])/7
+    }
+  }
+}
+```
+```{r}
+G1.715_byrep <- transform(G1.715_byrep, area.growth = growth.area, length.growth = growth.length)
+G1.715_filtered <- droplevels(filter(G1.715_byrep, Replicate != "NF_3"))
+G1.715_byrep
+```
+```{r}
+replications(y~Population+Error(Replicate),G1.715_byrep)
+replications(y~Population+Replicate,G1.715_byrep)
+```
+Unbalanced design
+```{r}
+model.length = lme(length.growth ~ Population, random =~1|Replicate,data=G1.715_byrep, method="REML")
+
+#plot(model.length)
+summary(model.length)
+```
+```{r}
+anova(model.length,type="sequential",adjustSigma = FALSE)
+```
+```{r}
+intervals(model.length)
+```
+```{r}
+library(effects)
+plot(allEffects(model.length))
+```
+```{r}
+library(multcompView)
+library(lsmeans)
+leastsquare = lsmeans(model.length,pairwise ~ Population, adjust="tukey")
+leastsquare
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
