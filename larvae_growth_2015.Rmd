@@ -22,61 +22,148 @@ library(dplyr)
 library(nlme)
 ```
 ```{r}
-setwd("~/Projects/CommonG/Analysis/Phenotype/Larvae/")
-all.larvae <- read.csv("../../../Data/P.S. Larvae Sizing - Sheet1.csv",header = TRUE, na.strings = "#DIV/0!")
+all.larvae <- read.csv("P.S. Larvae Sizing - Sheet1.csv",header = TRUE, na.strings = "#DIV/0!")
 head(all.larvae)
 ```
+
 ```{r}
-G1.larvae <- filter(all.larvae, Growth.1.or.2 == 1)
-G1.larvae <- select(G1.larvae, Population, Replicate,Date,K.Average.length,Include,Area,Scale,Janky)
-G1.78.715_byrep <- group_by(filter(G1.larvae, Date == "7-8-15" | Date == "7-15-15", Include == "y"),Population,Replicate)
-G1.78.715_byrep <- droplevels(G1.78.715_byrep)
-G1.78.715_byrep
+G1.78.715 <- all.larvae %>% filter(Growth.1.or.2 == 1) %>%
+  select(Population, Replicate, Date, K.Average.length, Include, Area, Scale, Janky) %>% 
+  filter(Date == "7-8-15" | Date == "7-15-15", Include == "y") %>%
+  group_by(Population,Replicate,Date)
+G1.78.715 <- droplevels(G1.78.715)
+G1.78.715
 ```
 ```{r}
-G1.715_byrep <- filter(G1.78.715_byrep,Date == "7-15-15")
-G1.715_byrep
+G1.78.715.mean <- summarise(G1.78.715, mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
+G1.78.715.mean
 ```
 
 ```{r}
-G1_byrep_mean.78 <- summarise(filter(G1.78.715_byrep,Date == "7-8-15"),mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
-G1_byrep_mean.78
-boxplot(mean.length~Population, G1_byrep_mean.78,main = "G1 Day 7 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(mean.area~Population, G1_byrep_mean.78,main = "G1 Day 7 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+G1.715 <- filter(G1.78.715,Date == "7-15-15") 
+G1.78 <- filter(G1.78.715,Date == "7-8-15")
+replications(K.Average.length~Population+Replicate,G1.715)
+replications(K.Average.length~Population+Replicate,G1.78)
 ```
-
 
 ```{r}
-G1_byrep_mean.715 <- summarise(G1.715_byrep,mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
-G1_byrep_mean.715
-boxplot(mean.length~Population, G1_byrep_mean.715,main = "G1 Day 14 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(mean.area~Population, G1_byrep_mean.715,main = "G1 Day 14 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+G1.78.mean <- filter(G1.78.715.mean,Date == "7-8-15")
+G1.78.mean
+boxplot(mean.length~Population, G1.78.mean,main = "G1 Day 7 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(mean.area~Population, G1.78.mean,main = "G1 Day 7 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
 ```
+
+```{r}
+G1.715.mean <- filter(G1.78.715.mean,Date == "7-15-15")
+G1.715.mean
+boxplot(mean.length~Population, G1.715.mean,main = "G1 Day 14 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(mean.area~Population, G1.715.mean,main = "G1 Day 14 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+```
+Subtracting the mean size at Time 7 from the mean size at Time 15.
+```{r}
+G1.78.715.growth <- transform(G1.78.mean,length.715 = G1.715.mean$mean.length, area.715 = G1.715.mean$mean.area,length.growth = G1.715.mean$mean.length - G1.78.mean$mean.length, area.growth = G1.715.mean$mean.area - G1.78.mean$mean.area)
+G1.78.715.growth
+boxplot(length.growth~Population, G1.78.715.growth,main = "G1 Mean Length Growth, Day 7 -Day 14",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(area.growth~Population, G1.78.715.growth,main = "G1 Mean Area Growth, Day 7 -Day 14",xlab = "Population",ylab = "Mean Length (mm^2)")
+```
+
+Repeat for G2 experiment (different genotypes, slightly different time window). The scaling of these is probably off by quite a bit due to not having a micrometer for a sbset of pictures. Probably can't use :(
+```{r}
+G2.712.721 <- all.larvae %>% filter(Growth.1.or.2 == 2) %>%
+  select(Population, Replicate, Date, K.Average.length, Include, Area) %>% 
+  filter(Date == "7-12-15" | Date == "7-21-15", Include == "y") %>%
+  group_by(Population,Replicate,Date)
+G2.712.721 <- droplevels(G2.712.721)
+G2.712.721
+```
+```{r}
+G2.712.721.mean <- summarise(G2.712.721, mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
+G2.712.721.mean
+```
+```{r}
+G2.721 <- filter(G2.712.721,Date == "7-21-15") 
+G2.712 <- filter(G2.712.721,Date == "7-12-15")
+replications(K.Average.length~Population+Replicate,G2.721)
+replications(K.Average.length~Population+Replicate,G2.712)
+```
+
+```{r}
+G2.712.mean <- filter(G2.712.721.mean,Date == "7-12-15")
+G2.712.mean
+boxplot(mean.length~Population, G2.712.mean,main = "G2 Day 6 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(mean.area~Population, G2.712.mean,main = "G2 Day 6 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+```
+```{r}
+G2.721.mean <- filter(G2.712.721.mean,Date == "7-21-15")
+G2.721.mean
+boxplot(mean.length~Population, G2.721.mean,main = "G2 Day 15 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(mean.area~Population, G2.721.mean,main = "G2 Day 15 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
+```
+
+```{r}
+G2.712.721.growth <- transform(G2.712.mean,length.721 = G2.721.mean$mean.length, area.721 = G2.721.mean$mean.area, length.growth = G2.721.mean$mean.length - G2.712.mean$mean.length, area.growth = G2.721.mean$mean.area - G2.712.mean$mean.area)
+G2.712.721.growth
+boxplot(length.growth~Population, G2.712.721.growth,main = "G2 Mean Length Growth, Day 6 -Day 15",xlab = "Population",ylab = "Mean Length (mm)")
+boxplot(area.growth~Population, G2.712.721.growth,main = "G2 Mean Area Growth, Day 6 -Day 15",xlab = "Population",ylab = "Mean Length (mm^2)")
+```
+
+ANOVA of G1 experiment using means:
+
+
+
+
+
+
+
+
+
+
+
+
+
+ANOVA using difference from average:
+
+```{r}
+
+
+#clunky way to do it probably
+growth.length = numeric(length = nrow(G1.715))
+growth.area = numeric(length = nrow(G1.715))
+for(m in 1:nrow(G1.78.mean)){
+  for(r in 1:nrow(G1.715)){
+    if(G1.78.mean$Replicate[m] %in% G1.715$Replicate[r]){
+      growth.length[r] <- (G1.715$K.Average.length[r] - G1.78.mean$mean.length[m])/7
+      growth.area[r] <- (G1.715$Area[r] - G1.78.mean$mean.area[m])/7
+    }
+  }}
+```
+
+
+Since I am measuring different larvae at each time point, I can't get a per individual growth rate. So I am getting the mean of sizes per replicate at time 7 and subtracting that mean from each individual larvae measured at Time 14.
 ```{r}
 #clunky way to do it probably
-growth.length = numeric(length = nrow(G1.715_byrep))
-growth.area = numeric(length = nrow(G1.715_byrep))
-for(m in 1:nrow(G1_byrep_mean.78)){
-  for(r in 1:nrow(G1.715_byrep)){
-    if(G1_byrep_mean.78$Replicate[m] %in% G1.715_byrep$Replicate[r]){
-      growth.length[r] <- (G1.715_byrep$K.Average.length[r] - G1_byrep_mean.78$mean.length[m])/7
-      growth.area[r] <- (G1.715_byrep$Area[r] - G1_byrep_mean.78$mean.area[m])/7
+growth.length = numeric(length = nrow(G1.715))
+growth.area = numeric(length = nrow(G1.715))
+for(m in 1:nrow(G1.78.mean)){
+  for(r in 1:nrow(G1.715)){
+    if(G1.78.mean$Replicate[m] %in% G1.715$Replicate[r]){
+      growth.length[r] <- (G1.715$K.Average.length[r] - G1.78.mean$mean.length[m])/7
+      growth.area[r] <- (G1.715$Area[r] - G1.78.mean$mean.area[m])/7
     }
-  }
-}
+  }}
 ```
 ```{r}
-G1.715_byrep <- transform(G1.715_byrep, area.growth = growth.area, length.growth = growth.length)
-G1.715_filtered <- droplevels(filter(G1.715_byrep, Replicate != "NF_3"))
-G1.715_byrep
+G1.715 <- transform(G1.715, area.growth = growth.area, length.growth = growth.length)
+G1.715_filterNF3 <- droplevels(filter(G1.715, Replicate != "NF_3"))
+G1.715
 ```
 ```{r}
-replications(y~Population+Error(Replicate),G1.715_byrep)
-replications(y~Population+Replicate,G1.715_byrep)
+replications(K.Average.length~Population+Replicate,G1.715)
+replications(K.Average.length~Population+Replicate,G1.78)
 ```
-Unbalanced design
+Unbalanced design. Doing an ANOVA on the growth rates.
 ```{r}
-model.length = lme(length.growth ~ Population, random =~1|Replicate,data=G1.715_byrep, method="REML")
+model.length = lme(length.growth ~ Population, random =~1|Replicate,data=G1.715, method="REML")
 
 #plot(model.length)
 summary(model.length)
@@ -97,25 +184,6 @@ library(lsmeans)
 leastsquare = lsmeans(model.length,pairwise ~ Population, adjust="tukey")
 leastsquare
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
