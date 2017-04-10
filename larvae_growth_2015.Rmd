@@ -20,173 +20,247 @@ http://rcompanion.org/rcompanion/d_07.html
 ```{r}
 library(dplyr)
 library(nlme)
-```
-```{r}
-all.larvae <- read.csv("P.S. Larvae Sizing - Sheet1.csv",header = TRUE, na.strings = "#DIV/0!")
-head(all.larvae)
-```
-
-```{r}
-G1.78.715 <- all.larvae %>% filter(Growth.1.or.2 == 1) %>%
-  select(Population, Replicate, Date, K.Average.length, Include, Area, Scale, Janky) %>% 
-  filter(Date == "7-8-15" | Date == "7-15-15", Include == "y") %>%
-  group_by(Population,Replicate,Date)
-G1.78.715 <- droplevels(G1.78.715)
-G1.78.715
-```
-```{r}
-G1.78.715.mean <- summarise(G1.78.715, mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
-G1.78.715.mean
-```
-
-```{r}
-G1.715 <- filter(G1.78.715,Date == "7-15-15") 
-G1.78 <- filter(G1.78.715,Date == "7-8-15")
-replications(K.Average.length~Population+Replicate,G1.715)
-replications(K.Average.length~Population+Replicate,G1.78)
-```
-
-```{r}
-G1.78.mean <- filter(G1.78.715.mean,Date == "7-8-15")
-G1.78.mean
-boxplot(mean.length~Population, G1.78.mean,main = "G1 Day 7 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(mean.area~Population, G1.78.mean,main = "G1 Day 7 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
-```
-
-```{r}
-G1.715.mean <- filter(G1.78.715.mean,Date == "7-15-15")
-G1.715.mean
-boxplot(mean.length~Population, G1.715.mean,main = "G1 Day 14 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(mean.area~Population, G1.715.mean,main = "G1 Day 14 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
-```
-Subtracting the mean size at Time 7 from the mean size at Time 15.
-```{r}
-G1.78.715.growth <- transform(G1.78.mean,length.715 = G1.715.mean$mean.length, area.715 = G1.715.mean$mean.area,length.growth = G1.715.mean$mean.length - G1.78.mean$mean.length, area.growth = G1.715.mean$mean.area - G1.78.mean$mean.area)
-G1.78.715.growth
-boxplot(length.growth~Population, G1.78.715.growth,main = "G1 Mean Length Growth, Day 7 -Day 14",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(area.growth~Population, G1.78.715.growth,main = "G1 Mean Area Growth, Day 7 -Day 14",xlab = "Population",ylab = "Mean Length (mm^2)")
-```
-
-Repeat for G2 experiment (different genotypes, slightly different time window). The scaling of these is probably off by quite a bit due to not having a micrometer for a sbset of pictures. Probably can't use :(
-```{r}
-G2.712.721 <- all.larvae %>% filter(Growth.1.or.2 == 2) %>%
-  select(Population, Replicate, Date, K.Average.length, Include, Area) %>% 
-  filter(Date == "7-12-15" | Date == "7-21-15", Include == "y") %>%
-  group_by(Population,Replicate,Date)
-G2.712.721 <- droplevels(G2.712.721)
-G2.712.721
-```
-```{r}
-G2.712.721.mean <- summarise(G2.712.721, mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
-G2.712.721.mean
-```
-```{r}
-G2.721 <- filter(G2.712.721,Date == "7-21-15") 
-G2.712 <- filter(G2.712.721,Date == "7-12-15")
-replications(K.Average.length~Population+Replicate,G2.721)
-replications(K.Average.length~Population+Replicate,G2.712)
-```
-
-```{r}
-G2.712.mean <- filter(G2.712.721.mean,Date == "7-12-15")
-G2.712.mean
-boxplot(mean.length~Population, G2.712.mean,main = "G2 Day 6 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(mean.area~Population, G2.712.mean,main = "G2 Day 6 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
-```
-```{r}
-G2.721.mean <- filter(G2.712.721.mean,Date == "7-21-15")
-G2.721.mean
-boxplot(mean.length~Population, G2.721.mean,main = "G2 Day 15 Mean Length per Replicate",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(mean.area~Population, G2.721.mean,main = "G2 Day 15 Mean Area per Replicate",xlab = "Population",ylab = "Mean Area (mm^2)")
-```
-
-```{r}
-G2.712.721.growth <- transform(G2.712.mean,length.721 = G2.721.mean$mean.length, area.721 = G2.721.mean$mean.area, length.growth = G2.721.mean$mean.length - G2.712.mean$mean.length, area.growth = G2.721.mean$mean.area - G2.712.mean$mean.area)
-G2.712.721.growth
-boxplot(length.growth~Population, G2.712.721.growth,main = "G2 Mean Length Growth, Day 6 -Day 15",xlab = "Population",ylab = "Mean Length (mm)")
-boxplot(area.growth~Population, G2.712.721.growth,main = "G2 Mean Area Growth, Day 6 -Day 15",xlab = "Population",ylab = "Mean Length (mm^2)")
-```
-
-ANOVA of G1 experiment using means:
-
-
-
-
-
-
-
-
-
-
-
-
-
-ANOVA using difference from average:
-
-```{r}
-
-
-#clunky way to do it probably
-growth.length = numeric(length = nrow(G1.715))
-growth.area = numeric(length = nrow(G1.715))
-for(m in 1:nrow(G1.78.mean)){
-  for(r in 1:nrow(G1.715)){
-    if(G1.78.mean$Replicate[m] %in% G1.715$Replicate[r]){
-      growth.length[r] <- (G1.715$K.Average.length[r] - G1.78.mean$mean.length[m])/7
-      growth.area[r] <- (G1.715$Area[r] - G1.78.mean$mean.area[m])/7
-    }
-  }}
-```
-
-
-Since I am measuring different larvae at each time point, I can't get a per individual growth rate. So I am getting the mean of sizes per replicate at time 7 and subtracting that mean from each individual larvae measured at Time 14.
-```{r}
-#clunky way to do it probably
-growth.length = numeric(length = nrow(G1.715))
-growth.area = numeric(length = nrow(G1.715))
-for(m in 1:nrow(G1.78.mean)){
-  for(r in 1:nrow(G1.715)){
-    if(G1.78.mean$Replicate[m] %in% G1.715$Replicate[r]){
-      growth.length[r] <- (G1.715$K.Average.length[r] - G1.78.mean$mean.length[m])/7
-      growth.area[r] <- (G1.715$Area[r] - G1.78.mean$mean.area[m])/7
-    }
-  }}
-```
-```{r}
-G1.715 <- transform(G1.715, area.growth = growth.area, length.growth = growth.length)
-G1.715_filterNF3 <- droplevels(filter(G1.715, Replicate != "NF_3"))
-G1.715
-```
-```{r}
-replications(K.Average.length~Population+Replicate,G1.715)
-replications(K.Average.length~Population+Replicate,G1.78)
-```
-Unbalanced design. Doing an ANOVA on the growth rates.
-```{r}
-model.length = lme(length.growth ~ Population, random =~1|Replicate,data=G1.715, method="REML")
-
-#plot(model.length)
-summary(model.length)
-```
-```{r}
-anova(model.length,type="sequential",adjustSigma = FALSE)
-```
-```{r}
-intervals(model.length)
-```
-```{r}
-library(effects)
-plot(allEffects(model.length))
-```
-```{r}
+library(plotrix)#for SE calculation
 library(multcompView)
 library(lsmeans)
-leastsquare = lsmeans(model.length,pairwise ~ Population, adjust="tukey")
-leastsquare
+library(ggplot2)
+library(lme4) #for linear mixed models
+```
+```{r}
+Day1 <- read.csv("Day1_Larvae.csv",header=TRUE )
+Day1 <- select(Day1,c(Population,Date,K.Average.length,Area)) 
+Day1$Replicate = NA
+all.larvae <- read.csv("P.S. Larvae Sizing - Sheet5.csv",header = TRUE, na.strings = "#DIV/0!")
 ```
 
+```{r}
+G1.78.715 <- all.larvae %>% 
+  filter(Growth.1.or.2 == 1,Date == "7-8-15" | Date == "7-15-15", Include == "y") %>%
+  select(Population, Replicate, Date, K.Average.length,Area)
+G1.all <- rbind(Day1,G1.78.715)
+G1.all <- group_by(G1.all,Population,Date)
+G1.all
+```
 
+```{r}
+G1.all.mean <- summarise(G1.all, mean.length = mean(K.Average.length, na.rm = TRUE), mean.area = mean(Area, na.rm = TRUE))
+G1.all.mean
+```
+Calculating shell area means from Day 1 for normalizations
+```{r}
+means.A <- summarise(G1.all, mean.area = mean(Area, na.rm = TRUE), mean.length = mean(K.Average.length))
+mean.A.HC <- subset(means.A,Population =="HC" &Date=="7-1-15",select=mean.area) #subset mean area for day 1 HC
+mean.A.SS <- subset(means.A,Population =="SS"&Date=="7-1-15",select=mean.area) #subset mean area for day 1 SS
+mean.A.NF <- subset(means.A,Population =="NF"&Date=="7-1-15",select=mean.area) #subset mean area for day 1 NF
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+mean.L.HC <- subset(means.A,Population =="HC" &Date=="7-1-15",select=mean.length) #subset mean area for day 1 HC
+mean.L.SS <- subset(means.A,Population =="SS"&Date=="7-1-15",select=mean.length) #subset mean area for day 1 SS
+mean.L.NF <- subset(means.A,Population =="NF"&Date=="7-1-15",select=mean.length) #subset mean area for day 1 NF
+```
+```{r}
+A.norms <- function(x) {  #write function
+  if(x == "HC") y <- mean.A.HC #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "SS") y <- mean.A.SS #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "NF") y <- mean.A.NF #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  return(y) #return result
+}
+L.norms <- function(x) {  #write function
+  if(x == "HC") y <- mean.L.HC #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "SS") y <- mean.L.SS #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "NF") y <- mean.L.NF #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  return(y) #return result
+}
+G1.all$A.norm <- as.numeric(sapply(G1.all$Population,A.norms))
+G1.all$L.norm <- as.numeric(sapply(G1.all$Population,L.norms))
+G1.all$A.rel <- G1.all$Area /G1.all$A.norm #normalize the area to be relative size
+G1.all$L.rel <- G1.all$K.Average.length /G1.all$L.norm #normalize the area to be relative size
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+Area.Size = summarise(G1.all,mean.Area = mean(Area, na.rm = T),se.Area = std.error(Area,na.rm =T),mean.RelArea = mean(A.rel,na.rm=T),se.RelArea = std.error(A.rel,na.rm=T),mean.Length = mean(K.Average.length, na.rm = T),se.Length = std.error(K.Average.length,na.rm =T),mean.RelLength = mean(L.rel,na.rm=T),se.RelLength = std.error(L.rel,na.rm=T))
+Area.Size
+```
+```{r}
+p.Day1 <- ggplot(filter(G1.all,Date == "7-1-15"), aes(x=Population, y=Area,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Area Day 1",y="Area (mm^2)")
+p.Day1
+```
+```{r}
+p.Day1.L <- ggplot(filter(G1.all,Date == "7-1-15"), aes(x=Population, y=K.Average.length,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Length Day 1",y="Length (mm)")
+p.Day1.L
+```
+Checking for normalcy
+```{r}
+plot(density(filter(G1.all,Date=="7-1-15",Population=="SS")$Area,na.rm = T),col="#56B4E9", main ="Day 1 distributions")
+lines(density(filter(G1.all,Date=="7-1-15",Population=="HC")$Area,na.rm = T),col="#999999")
+lines(density(filter(G1.all,Date=="7-1-15",Population=="NF")$Area,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(G1.all,Date=="7-1-15",Population=="SS")$Area)
+shapiro.test(filter(G1.all,Date=="7-1-15",Population=="HC")$Area)
+shapiro.test(filter(G1.all,Date=="7-1-15",Population=="NF")$Area)
+
+plot(density(filter(G1.all,Date=="7-8-15",Population=="SS")$Area,na.rm = T),col="#56B4E9", main ="Day 7 distributions",xlim=c(0.009,0.03),ylim=c(0,200))
+lines(density(filter(G1.all,Date=="7-8-15",Population=="HC")$Area,na.rm = T),col="#999999")
+lines(density(filter(G1.all,Date=="7-8-15",Population=="NF")$Area,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(G1.all,Date=="7-8-15",Population=="SS")$Area)
+shapiro.test(filter(G1.all,Date=="7-8-15",Population=="HC")$Area)
+shapiro.test(filter(G1.all,Date=="7-8-15",Population=="NF")$Area)
+
+plot(density(filter(G1.all,Date=="7-15-15",Population=="SS")$Area,na.rm = T),col="#56B4E9", main ="Day 14 distributions",xlim =c(0.009,0.045))
+lines(density(filter(G1.all,Date=="7-15-15",Population=="HC")$Area,na.rm = T),col="#999999")
+lines(density(filter(G1.all,Date=="7-15-15",Population=="NF")$Area,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(G1.all,Date=="7-15-15",Population=="SS")$Area)
+shapiro.test(filter(G1.all,Date=="7-15-15",Population=="HC")$Area)
+shapiro.test(filter(G1.all,Date=="7-15-15",Population=="NF")$Area)
+```
+
+```{r}
+Area.Size$Date <- c(1,14,7,1,14,7,1,14,7)
+Fig.Exp1.size <- ggplot(Area.Size, aes(x=Date, y=mean.RelArea, group=Population)) + 
+  geom_errorbar(aes(ymin=Area.Size$mean.RelArea-Area.Size$se.RelArea,ymax=Area.Size$mean.RelArea+Area.Size$se.RelArea,color=Population), width=.07) +
+  geom_line(aes(color=Population) ,size = 0.5) +   
+  geom_point(aes(shape=Population,color=Population), size = 3)+
+  xlab("Days") +scale_x_continuous(breaks=c(1,7,14))+
+  ylab(expression(paste("Relative Shell Area"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Larvae Relative Shell Area") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+Area.Size$Date <- c(1,14,7,1,14,7,1,14,7)
+Fig.Exp1.size <- ggplot(Area.Size, aes(x=Date, y=mean.RelLength, group=Population)) + 
+  geom_errorbar(aes(ymin=Area.Size$mean.RelLength-Area.Size$se.RelLength,ymax=Area.Size$mean.RelLength+Area.Size$se.RelLength,color=Population), width=.07,position = position_dodge(width = 0.1)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.1)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  xlab("Days") +scale_x_continuous(breaks=c(1,7,14))+
+  ylab(expression(paste("Relative Shell Length"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Larvae Relative Shell Length") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+```
+
+```{r}
+Area.Size$Date <- c(1,14,7,1,14,7,1,14,7)
+Fig.Exp1.size <- ggplot(Area.Size, aes(x=Date, y=mean.Area, group=Population)) + 
+  geom_errorbar(aes(ymin=Area.Size$mean.Area-Area.Size$se.Area,ymax=Area.Size$mean.Area+Area.Size$se.Area,color=Population), width=.07) +
+  geom_line(aes(color=Population) ,size = 0.5) +   
+  geom_point(aes(shape=Population,color=Population), size = 3)+
+  xlab("Days") +scale_x_continuous(breaks=c(1,7,14))+
+  ylab(expression(paste("Shell Area (mm^2)"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Larvae Shell Area") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+Fig.Exp1.size <- ggplot(Area.Size, aes(x=Date, y=mean.Length, group=Population)) + 
+  geom_errorbar(aes(ymin=Area.Size$mean.Length-Area.Size$se.Length,ymax=Area.Size$mean.Length+Area.Size$se.Length,color=Population), width=.07) +
+  geom_line(aes(color=Population) ,size = 0.5) +   
+  geom_point(aes(shape=Population,color=Population), size = 3)+
+  xlab("Days") +scale_x_continuous(breaks=c(1,7,14))+
+  ylab(expression(paste("Shell Area (mm)"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Larvae Shell Length") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+```
+
+```{r}
+G1.D1 <- filter(G1.all, Date == "7-1-15")
+area.D1 <- aov(Area ~ Population, data=G1.D1) #test the hypothesis relative size does not differ between treatments on Day 1
+area.D1.res <- anova(area.D1)
+area.D1.res
+```
+
+```{r}
+G1.D7 <- filter(G1.all, Date == "7-8-15")
+relarea.D7.model = lmer(A.rel ~ Population + (1|Replicate),data=G1.D7,na.action = na.omit)
+summary(relarea.D7.model)
+relarea.null <- lmer(A.rel ~ (1|Replicate),data=G1.D7,REML=FALSE)
+relarea.model.R <- lmer(A.rel ~ Population + (1|Replicate),data=G1.D7,REML = F)
+anova(relarea.null,relarea.model.R)
+```
+```{r}
+area.D7.model = lmer(Area ~ Population + (1|Replicate),data=G1.D7,na.action = na.omit)
+summary(area.D7.model)
+area.null <- lmer(Area ~ (1|Replicate),data=G1.D7,REML=FALSE)
+area.model.R <- lmer(Area ~ Population + (1|Replicate),data=G1.D7,REML = F)
+anova(area.null,area.model.R)
+```
+```{r}
+G1.D14 <- filter(G1.all, Date == "7-15-15")
+relarea.D14.model = lmer(A.rel ~ Population + (1|Replicate),data=G1.D14,na.action = na.omit)
+summary(relarea.D14.model)
+relarea.null <- lmer(A.rel ~ (1|Replicate),data=G1.D14,REML=FALSE)
+relarea.model.R <- lmer(A.rel ~ Population + (1|Replicate),data=G1.D14,REML = FALSE)
+anova(relarea.null,relarea.model.R)
+```
+Not relative:
+```{r}
+G1.D14 <- filter(G1.all, Date == "7-15-15")
+relarea.D14.model = lmer(Area ~ Population + (1|Replicate),data=G1.D14,na.action = na.omit)
+summary(relarea.D14.model)
+relarea.null <- lmer(Area ~ (1|Replicate),data=G1.D14,REML=FALSE)
+relarea.model.R <- lmer(Area ~ Population + (1|Replicate),data=G1.D14,REML = FALSE)
+anova(relarea.null,relarea.model.R)
+```
+
+```{r}
+pairwise.t.test(G1.D1$Area,G1.D1$Population,p.adjust.method = "bonferroni")
+pairwise.t.test(G1.D7$Area,G1.D7$Population,p.adjust.method = "bonferroni")
+pairwise.t.test(G1.D14$Area,G1.D14$Population,p.adjust.method = "bonferroni")
+```
+```{r}
+pairwise.t.test(G1.D7$A.rel,G1.D7$Population,p.adjust.method = "bonferroni")
+pairwise.t.test(G1.D7$A.rel,G1.D7$Population,p.adjust.method = "bonferroni")
+pairwise.t.test(G1.D14$A.rel,G1.D14$Population,p.adjust.method = "bonferroni")
+```
+```{r}
+library(PMCMR)
+posthoc.kruskal.nemenyi.test(G1.D7$Area,as.factor(G1.D7$Population),dist="Chisquare")
+posthoc.kruskal.nemenyi.test(G1.D7$A.rel,as.factor(G1.D7$Population),dist="Chisquare")
+posthoc.kruskal.nemenyi.test(G1.D14$Area,as.factor(G1.D14$Population),dist="Chisquare")
+posthoc.kruskal.nemenyi.test(G1.D14$A.rel,as.factor(G1.D14$Population),dist="Chisquare")
+```
+
