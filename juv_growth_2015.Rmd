@@ -1,59 +1,245 @@
 ---
-title: "Juvenile"
+title: "Puget Sound Common Garden 2015 - Juvenile Growth"
 output: html_notebook
 ---
-
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
-```{r}
+```{r,include=FALSE}
 library(dplyr)
 library(nlme)
+library(lme4) #Linear mixed model
+library(plotrix)#for SE calculation
+library(multcompView)
+library(lsmeans)
+library(ggplot2)
+library(PMCMR) #for Kruskal-Wallis test, with Nemenyi post-hoc test
+```
+Reading in file from Google Sheets.
+```{r}
+all.tiles <- read.csv("Oyster Tile Size Data - Length.csv",header = TRUE, na.strings = c("#DIV/0!","#VALUE!","e","gone","g"))
+```
+Filter out Stack 2 (was left on the dock for 4 hours) and filter out oysters from B ezxperiment, which were started 2 weeks later and had significantly higher mortality. 
+```{r}
+stack.1.A.ex <- filter(all.tiles,Stack == 1,A.or.B == "A",include !="n") %>% 
+  select(Tile,Population,include, Status,Mean.length.827, Area.827, Mean.length.1014, Area.1014, Growth.1014, Mean.length.113,Growth.113,Tray) %>% group_by(Population)
+```
+Calculating shell area means from Day 1 for normalizations
+```{r}
+means.827 <- summarise(stack.1.A.ex, mean.area.827 = mean(Area.827, na.rm = TRUE))
+mean.A.827.HC <- subset(means.827,Population =="HC" ,select=mean.area.827) #subset mean area for day 1 HC
+mean.A.827.SS <- subset(means.827,Population =="SS",select=mean.area.827) #subset mean area for day 1 SS
+mean.A.827.NF <- subset(means.827,Population =="NF",select=mean.area.827) #subset mean area for day 1 NF
+```
+Normalize size at Day 48 by mean size per population at Day 1.
+```{r}
+E1.norms <- function(x) {  #write function
+  if(x == "HC") y <- mean.A.827.HC #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "SS") y <- mean.A.827.SS #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "NF") y <- mean.A.827.NF #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  return(y) #return result
+}
+stack.1.A.ex$A.norm <- as.numeric(sapply(stack.1.A.ex$Population,E1.norms))
+
+stack.1.A.ex$A.rel.827 <- stack.1.A.ex$Area.827 /stack.1.A.ex$A.norm #normalize the area to be relative size
+stack.1.A.ex$A.rel.1014 <- stack.1.A.ex$Area.1014 /stack.1.A.ex$A.norm #normalize the area to be relative size
+
+new.827 <- select(stack.1.A.ex,Tile,Population,A.rel.827,Area.827,Tray) %>% mutate(Day = "1")
+colnames(new.827) <- c("Tile","Population","Relarea","Area","Tray","Day")
+new.1014 <- select(stack.1.A.ex,Tile,Population,A.rel.1014,Area.1014,Tray) %>% mutate(Day = "48")
+colnames(new.1014) <- c("Tile","Population","Relarea","Area","Tray","Day")
+stack.1.A.ex.byDay <- rbind(new.827,new.1014)
+stack.1.A.ex.byDay <- group_by(stack.1.A.ex.byDay,Day,Population)
+
+Shell.Size = summarise(stack.1.A.ex.byDay,mean.Area = mean(Area, na.rm = T),se.Area = std.error(Area,na.rm =T),mean.RelArea = mean(Relarea,na.rm=T),se.RelArea = std.error(Relarea,na.rm=T))
+```
+
+```{r}
+Fig.Line.size <- ggplot(Shell.Size, aes(x=Day, y=mean.RelArea, group=Population)) + 
+  geom_errorbar(aes(ymin=Shell.Size$mean.RelArea-Shell.Size$se.RelArea,ymax=Shell.Size$mean.RelArea+Shell.Size$se.RelArea,color=Population), width=.07,position = position_dodge(width = 0.1)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.1)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  xlab("Days") +
+  ylab(expression(paste("Shell Relative Area"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Juvenile Relative Shell Area") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Line.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
 ```
 ```{r}
-setwd("~/Projects/CommonG/Analysis/Phenotype/Juveniles/")
-all.tiles <- read.csv("../../../Data/Oyster Tile Size Data - Length.csv",header = TRUE, na.strings = c("#DIV/0!","#VALUE!","e","gone","g"))
-all.tiles
+Fig.Exp1.size <- ggplot(Shell.Size, aes(x=Day, y=mean.Area, group=Population)) + 
+  geom_errorbar(aes(ymin=Shell.Size$mean.Area-Shell.Size$se.Area,ymax=Shell.Size$mean.Area+Shell.Size$se.Area,color=Population), width=.07,position = position_dodge(width = 0.1)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.1)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  xlab("Days") +
+  ylab(expression(paste("Shell Area (mm^2)"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Larvae Shell Area") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+```
+Significance testing for relative area, not taking Tray into account.
+```{r}
+relarea.log <- aov(log10(Relarea) ~ Population*Day, data=stack.1.A.ex.byDay) #test the hypothesis relative size does not differ between treatments and time
+relarea.log.res <- anova(relarea.log)
+relarea.log.res
 ```
 ```{r}
-all.tiles <- mutate(all.tiles, Growth.Rate.1014 = Growth.1014 / 48, Growth.Rate.113 = Growth.113 / 68)
+par(mfrow=c(3,2)) #set plotting configuration
+par(mar=c(1,1,1,1)) #set margins for plots
+hist(relarea.log$residuals) #plot histogram of residuals
+boxplot(relarea.log$residuals) #plot boxplot of residuals
+plot(relarea.log) #display residuals versus fitter, normal QQ plot, leverage plot
+```
+```{r}
+E1.lsm <- lsmeans(relarea.log, ~ Population*Day, adjust="tukey") #compute least-squares means for Treatment*Day from ANOVA model
+E1.pairs <- cld(E1.lsm, alpha=.05, Letters=letters) #list pairwise tests and letter display
+E1.pairs #view results
+```
+## Linear mixed model methods:
+
+LMM on Day 1 Area, with Tray as random effect.
+```{r}
+D1 <- filter(stack.1.A.ex.byDay, Day == 1)
+area.model = lmer(log10(Area) ~ Population + (1|Tray),data=D1,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(log10(Area) ~ (1|Tray),data=D1,REML=FALSE)
+area.model.R <- lmer(log10(Area) ~ Population + (1|Tray),data=D1,REML = F)
+anova(area.null,area.model.R)
+```
+Not significant.
+
+LMM on Day 48 Area, with Tray as random effect.
+```{r}
+D48 <- filter(stack.1.A.ex.byDay, Day == 48,Area > 1)
+area.model = lmer(log10(Area) ~ Population + (1|Tray),data=D48,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(log10(Area) ~ (1|Tray),data=D48,REML=FALSE)
+area.model.R <- lmer(log10(Area) ~ Population + (1|Tray),data=D48,REML = FALSE)
+anova(area.null,area.model.R)
+```
+p-value of 0.0134
+
+LMM on Day 48 relative area, with Tray as random effect.
+```{r}
+D48 <- filter(stack.1.A.ex.byDay, Day == 48,Area > 1)
+relarea.model = lmer(log10(Relarea) ~ Population + (1|Tray),data=D48,na.action = na.omit)
+summary(relarea.model)
+relarea.null <- lmer(log10(Relarea) ~ (1|Tray),data=D48,REML=FALSE)
+relarea.model.R <- lmer(log10(Relarea) ~ Population + (1|Tray),data=D48,REML = F)
+anova(relarea.null,relarea.model.R)
+```
+p-value is 0.08412
+
+Not log-transformed, Day 1 Area
+```{r}
+area.model = lmer(Area ~ Population + (1|Tray),data=D1,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(Area ~ (1|Tray),data=D1,REML=FALSE)
+area.model.R <- lmer(Area ~ Population + (1|Tray),data=D1,REML = F)
+anova(area.null,area.model.R)
+```
+Not significant
+
+Not log-transformed, Area Day 48
+```{r}
+area.model = lmer(Area ~ Population + (1|Tray),data=D48,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(Area~ (1|Tray),data=D48,REML=FALSE)
+area.model.R <- lmer(Area ~ Population + (1|Tray),data=D48,REML = F)
+anova(area.null,area.model.R)
+```
+p-value is 0.002778
+
+Not log-transformed, relative area Day 48
+```{r}
+area.model = lmer(Relarea ~ Population + (1|Tray),data=D48,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(Relarea~ (1|Tray),data=D48,REML=FALSE)
+area.model.R <- lmer(Relarea ~ Population + (1|Tray),data=D48,REML = F)
+anova(area.null,area.model.R)
+```
+p-value - 0.06747
+```{r}
+pairwise.t.test(D1$Area,D1$Population,p.adjust.method = "bonferroni")
+pairwise.t.test(D48$Area,D48$Population,p.adjust.method = "bonferroni")
+pairwise.t.test(D48$Relarea,D48$Population,p.adjust.method = "bonferroni")
+```
+Kruskal and Wallis test, with Nemenyi post-hoc test
+```{r}
+posthoc.kruskal.nemenyi.test(D1$Area,D1$Population,dist="Chisquare")
+posthoc.kruskal.nemenyi.test(D48$Area,D48$Population,dist="Chisquare")
+posthoc.kruskal.nemenyi.test(D48$Relarea,D48$Population,dist="Chisquare")
+```
+Graphing distributioins at each day
+```{r}
+p.rel <- ggplot(stack.1.A.ex, aes(x=Population, y=A.rel.827,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Relative Area Day 1",y="Relative Area")
+p.rel
+
+p.area <- ggplot(stack.1.A.ex, aes(x=Population, y=Area.827,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Area Day 1",y="Area (mm^2)")
+p.area
+```
+
+```{r,}
+excludes.1014 <- filter(stack.1.A.ex,!is.na(Area.1014) & Area.1014 > 2)
+
+p.rel.1014 <- ggplot(excludes.1014, aes(x=Population, y=A.rel.1014,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Relative Area Day 48",y="Relative Area")
+p.rel.1014
+p.1014 <- ggplot(excludes.1014, aes(x=Population, y=Area.1014,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Area Day 48",y="Area (mm^2)")
+p.1014
+
+```
+
+Calculating Instantaneous growth.
+```{r}
+excludes.Growth <- filter(stack.1.A.ex,!is.na(Area.1014) & Area.1014 > 2) %>% transform(length.Igrowth = ((log(Mean.length.1014) - log(Mean.length.827))/48)*100, area.Igrowth = ((log(Area.1014) - log(Area.827))/48)*100) %>% group_by(Population)
+
+#Summarise(excludes.Growth, mean.length.Igrowth = mean(length.Igrowth, na.rm = TRUE), mean.area.Igrowth = mean(area.Igrowth, na.rm = TRUE),mean.length.growth = mean(length.growth, na.rm = TRUE), mean.area.growth = mean(area.growth, na.rm = TRUE))
 ```
 
 ```{r}
-tiles.oct <- select(filter(all.tiles,!is.na(Growth.1014)),Tile,Population,include,Mean.length.827,Mean.length.1014,Growth.1014,Growth.Adjusted.1014,Mean.length.113,Growth.113,Growth.Adjusted.113,Tray,Stack, Growth.Rate.1014,Growth.Rate.113)
-tiles.oct.filt <- filter(tiles.oct,include != "n")
-tiles.nov <- select(filter(all.tiles,!is.na(Growth.113)),Tile,Population,include,Mean.length.827,Mean.length.1014,Growth.Adjusted.1014,Growth.1014,Mean.length.113,Growth.Adjusted.113,Growth.113,Tray,Stack,Growth.Rate.1014,Growth.Rate.113)
-tiles.nov.filt <- filter(tiles.nov,include != "n")
-```
-```{r}
-dim(tiles.oct)
-dim(tiles.oct.filt)
-dim(tiles.nov)
-dim(tiles.nov.filt)
-tiles.oct
-```
-```{r}
-boxplot(Mean.length.827~Population, tiles.oct.filt,main = "Shell Length August 2015",xlab = "Population",ylab = "Juvenile Shell length (mm)")
+p.rel.Ig <- ggplot(excludes.Growth, aes(x=Population, y=area.Igrowth,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Instantaneous Growth Day 48",y="Instantaneous Growth")
+p.rel.Ig
 ```
 
 ```{r}
-boxplot(Growth.Rate.1014~Population, tiles.oct.filt,main = "Juvenile Shell Growth Rate August - October 2015",xlab = "Population",ylab = "Shell Growth (mm/day)")
+area.model = lmer(log10(area.Igrowth) ~ Population + (1|Tray),data=excludes.Growth)
+summary(area.model)
+area.null <- lmer(log10(area.Igrowth) ~ (1|Tray),data=excludes.Growth,REML=FALSE)
+area.model.R <- lmer(log10(area.Igrowth) ~ Population + (1|Tray),data=excludes.Growth,REML = F)
+anova(area.null,area.model.R)
 ```
 ```{r}
-boxplot(Growth.Adjusted.1014~Population, tiles.oct.filt,"Adjusted Juvenile Growth August - October 2015",xlab = "Population",ylab = "Adjusted Shell Growth (mm)")
+area.null <- lmer(area.Igrowth ~ (1|Tray),data=excludes.Growth,REML=FALSE)
+summary(area.model)
+area.model.R <- lmer(area.Igrowth ~ Population + (1|Tray),data=excludes.Growth,REML = F)
+anova(area.null,area.model.R)
 ```
-```{r}
-boxplot(Growth.Rate.113~Population, tiles.nov.filt,main = "Juvenile Shell Growth Rate August - November 2015",xlab = "Population",ylab = "Shell Growth (cm/day)")
-```
-
-
-
-
-
-
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
