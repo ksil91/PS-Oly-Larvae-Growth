@@ -2,16 +2,28 @@ Puget Sound Larvae Growth
 ================
 Katherine Silliman
 
--   [](#section)
+-   [Setting up](#setting-up)
+-   [Day 1](#day-1)
+-   [Plotting Size through time](#plotting-size-through-time)
     -   [Day 7](#day-7)
     -   [Day 14](#day-14)
 -   [Using Relative Area and Length](#using-relative-area-and-length)
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.
-
 References <http://www.flutterbys.com.au/stats/tut/tut9.2a.html> <http://rcompanion.org/rcompanion/d_07.html>
+
+``` r
+library(dplyr) #data frame grouping
+library(nlme) #LMMs, using likelihood ratio test for significance
+library(plotrix)#for SE calculation
+#library(multcompView)
+library(ggplot2)
+library(lme4) #for linear mixed models
+library(afex) #different way for getting significance from LMMs
+library(PMCMR) #Kruskal-Wallis test
+```
+
+Setting up
+==========
 
 Reading in larvae size data.
 
@@ -41,6 +53,9 @@ G1.all.mean
     ## 7         SS  7-1-15 0.01671818 0.0003438600   0.1561818 0.002239970
     ## 8         SS 7-15-15 0.02263588 0.0005660942   0.1801235 0.002482262
     ## 9         SS  7-8-15 0.01971667 0.0003157443   0.1669556 0.001640085
+
+Day 1
+=====
 
 Plotting size distributions at Day 1.
 
@@ -292,7 +307,8 @@ shapiro.test(filter(G1.all,Date=="7-15-15",Population=="NF")$Average_Length)
     ## data:  filter(G1.all, Date == "7-15-15", Population == "NF")$Average_Length
     ## W = 0.96115, p-value = 0.2626
 
-Plotting size through time.
+Plotting Size through time
+==========================
 
 ``` r
 G1.all.mean$Date <- c(1,14,7,1,14,7,1,14,7)
@@ -345,7 +361,7 @@ Fig.L <- Fig.L + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
 Fig.L
 ```
 
-![](larvae_growth_2015_files/figure-markdown_github/unnamed-chunk-7-2.png) \#\# Testing for differences in size ANOVA of size at Day 1 to test if size differs accross populations at Day 1
+![](larvae_growth_2015_files/figure-markdown_github/unnamed-chunk-7-2.png) \# Testing for differences in size ANOVA of size at Day 1 to test if size differs accross populations at Day 1
 
 ``` r
 G1.D1 <- filter(G1.all, Date == "7-1-15")
@@ -374,7 +390,8 @@ length.D1.res
     ## Population  2 0.00016107 8.0537e-05  0.9391 0.4006
     ## Residuals  35 0.00300156 8.5759e-05
 
-### Day 7
+Day 7
+-----
 
 Untransformed shell area.
 
@@ -681,7 +698,8 @@ print(afex.1)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '+' 0.1 ' ' 1
 
-### Day 14
+Day 14
+------
 
 Untransformed Day 14 shell area
 
@@ -1207,7 +1225,7 @@ pairwise.t.test(G1.D14$Average_Length,G1.D14$Population,p.adjust.method = "bonfe
     ## P value adjustment method: bonferroni
 
 Using Relative Area and Length
-------------------------------
+==============================
 
 Calculating shell area means at Day 1 for normalizations. This could be used is shell size varied significantly at Day 1. We did not observe this, but size did differ slightly between HC and NF/SS.
 
