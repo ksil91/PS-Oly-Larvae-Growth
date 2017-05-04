@@ -1,6 +1,9 @@
 ---
-title: "Puget Sound Common Garden 2015 - Juvenile Growth"
-output: html_notebook
+title: "Puget Sound Juvenile Growth, 2015"
+author: "Katherine Silliman"
+output:
+  github_document:
+    toc: yes
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -8,59 +11,88 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r,include=FALSE}
-library(dplyr)
-library(nlme)
-library(lme4) #Linear mixed model
+#library(lsmeans)
+library(dplyr) #data frame grouping
+library(nlme) #LMMs, using likelihood ratio test for significance
 library(plotrix)#for SE calculation
-library(multcompView)
-library(lsmeans)
+#library(multcompView)
 library(ggplot2)
-library(PMCMR) #for Kruskal-Wallis test, with Nemenyi post-hoc test
+library(lme4) #for linear mixed models
+library(afex) #different way for getting significance from LMMs
+library(PMCMR) #Kruskal-Wallis test
 ```
+# Setting up
 Reading in file from Google Sheets.
 ```{r}
-all.tiles <- read.csv("Oyster Tile Size Data - Length.csv",header = TRUE, na.strings = c("#DIV/0!","#VALUE!","e","gone","g"))
+all.tiles <- read.csv("Oyster Tile Size Data - Sheet9.csv",header = TRUE, na.strings = c("#DIV/0!","#VALUE!","e","gone","g"))
 ```
-Filter out Stack 2 (was left on the dock for 4 hours) and filter out oysters from B ezxperiment, which were started 2 weeks later and had significantly higher mortality. 
+Filter out oysters from B experiment, which was started 2 weeks later and had significantly higher mortality. 
 ```{r}
-stack.1.A.ex <- filter(all.tiles,Stack == 1,A.or.B == "A",include !="n") %>% 
-  select(Tile,Population,include, Status,Mean.length.827, Area.827, Mean.length.1014, Area.1014, Growth.1014, Mean.length.113,Growth.113,Tray) %>% group_by(Population)
+stack.1.A <- filter(all.tiles,A.or.B == "A") %>% 
+  select(Tile,Population,include,Status,Mean.length.827, Area.827, Mean.length.1014, Area.1014, Growth.1014, Mean.length.113,Area.113,Growth.113,Tray) %>% group_by(Population)
 ```
-Calculating shell area means from Day 1 for normalizations
-```{r}
-means.827 <- summarise(stack.1.A.ex, mean.area.827 = mean(Area.827, na.rm = TRUE))
-mean.A.827.HC <- subset(means.827,Population =="HC" ,select=mean.area.827) #subset mean area for day 1 HC
-mean.A.827.SS <- subset(means.827,Population =="SS",select=mean.area.827) #subset mean area for day 1 SS
-mean.A.827.NF <- subset(means.827,Population =="NF",select=mean.area.827) #subset mean area for day 1 NF
-```
-Normalize size at Day 48 by mean size per population at Day 1.
-```{r}
-E1.norms <- function(x) {  #write function
-  if(x == "HC") y <- mean.A.827.HC #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
-  if(x == "SS") y <- mean.A.827.SS #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
-  if(x == "NF") y <- mean.A.827.NF #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
-  return(y) #return result
-}
-stack.1.A.ex$A.norm <- as.numeric(sapply(stack.1.A.ex$Population,E1.norms))
 
-stack.1.A.ex$A.rel.827 <- stack.1.A.ex$Area.827 /stack.1.A.ex$A.norm #normalize the area to be relative size
-stack.1.A.ex$A.rel.1014 <- stack.1.A.ex$Area.1014 /stack.1.A.ex$A.norm #normalize the area to be relative size
-
-new.827 <- select(stack.1.A.ex,Tile,Population,A.rel.827,Area.827,Tray) %>% mutate(Day = "1")
-colnames(new.827) <- c("Tile","Population","Relarea","Area","Tray","Day")
-new.1014 <- select(stack.1.A.ex,Tile,Population,A.rel.1014,Area.1014,Tray) %>% mutate(Day = "48")
-colnames(new.1014) <- c("Tile","Population","Relarea","Area","Tray","Day")
+```{r}
+new.827 <- select(stack.1.A.ex,Tile,Population,Area.827,Mean.length.827,L.rel.827, Tray) %>% mutate(Day = "1")
+colnames(new.827) <- c("Tile","Population","Relarea","Area","Length","RelLength","Tray","Day")
+new.1014 <- select(stack.1.A.ex,Tile,Population,A.rel.1014,Area.1014,Mean.length.1014,L.rel.1014,Tray) %>% mutate(Day = "48")
+colnames(new.1014) <- c("Tile","Population","Relarea","Area","Length","RelLength","Tray","Day")
 stack.1.A.ex.byDay <- rbind(new.827,new.1014)
 stack.1.A.ex.byDay <- group_by(stack.1.A.ex.byDay,Day,Population)
 
-Shell.Size = summarise(stack.1.A.ex.byDay,mean.Area = mean(Area, na.rm = T),se.Area = std.error(Area,na.rm =T),mean.RelArea = mean(Relarea,na.rm=T),se.RelArea = std.error(Relarea,na.rm=T))
+Shell.Size = summarise(stack.1.A.ex.byDay,mean.Area = mean(Area, na.rm = T),se.Area = std.error(Area,na.rm =T),mean.RelArea = mean(Relarea,na.rm=T),se.RelArea = std.error(Relarea,na.rm=T),mean.Length=mean(Length,na.rm=T),se.Length = std.error(Length,na.rm=T), mean.RelLength=mean(RelLength,na.rm=T),se.RelLength=std.error(RelLength,na.rm=T))
 ```
 
 ```{r}
-Fig.Line.size <- ggplot(Shell.Size, aes(x=Day, y=mean.RelArea, group=Population)) + 
-  geom_errorbar(aes(ymin=Shell.Size$mean.RelArea-Shell.Size$se.RelArea,ymax=Shell.Size$mean.RelArea+Shell.Size$se.RelArea,color=Population), width=.07,position = position_dodge(width = 0.1)) +
-  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.1)) +   
-  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+p.Day1 <- ggplot(filter(stack.1.A.ex.byDay,Day == 1), aes(x=Population, y=Area,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Area Day 1",y="Area (mm^2)")
+p.Day1
+
+p.Day1.L <- ggplot(filter(stack.1.A.ex.byDay,Day == 1), aes(x=Population, y=Length,fill=Population)) + geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.1,fill="white") + labs(title="Length Day 1",y="Length (mm)")
+p.Day1.L
+```
+Checking for normalcy in Area
+```{r}
+plot(density(filter(stack.1.A.ex.byDay,Day==1,Population=="SS")$Area,na.rm = T),col="#56B4E9", main ="Day 1 distributions")
+lines(density(filter(stack.1.A.ex.byDay,Day==1,Population=="HC")$Area,na.rm = T),col="#999999")
+lines(density(filter(stack.1.A.ex.byDay,Day==1,Population=="NF")$Area,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(stack.1.A.ex.byDay,Day==1,Population=="SS")$Area)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==1,Population=="HC")$Area)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==1,Population=="NF")$Area)
+
+plot(density(filter(stack.1.A.ex.byDay,Day==48,Population=="SS")$Area,na.rm = T),col="#56B4E9", main ="Day 48 distributions",xlim=c(-20,170),ylim=c(0,.014))
+lines(density(filter(stack.1.A.ex.byDay,Day==48,Population=="HC")$Area,na.rm = T),col="#999999")
+lines(density(filter(stack.1.A.ex.byDay,Day==48,Population=="NF")$Area,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(stack.1.A.ex.byDay,Day==48,Population=="SS")$Area)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==48,Population=="HC")$Area)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==48,Population=="NF")$Area)
+```
+Checking for non-normlcy in Length
+```{r}
+plot(density(filter(stack.1.A.ex.byDay,Day==1,Population=="SS")$Length,na.rm = T),col="#56B4E9", main ="Day 1 Length distributions",xlim=c(-0.5,5.5))
+lines(density(filter(stack.1.A.ex.byDay,Day==1,Population=="HC")$Length,na.rm = T),col="#999999")
+lines(density(filter(stack.1.A.ex.byDay,Day==1,Population=="NF")$Length,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(stack.1.A.ex.byDay,Day==1,Population=="SS")$Length)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==1,Population=="HC")$Length)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==1,Population=="NF")$Length)
+
+plot(density(filter(stack.1.A.ex.byDay,Day==48,Population=="SS")$Length,na.rm = T),col="#56B4E9", main ="Day 48 Length  distributions",xlim=c(-1,18))
+lines(density(filter(stack.1.A.ex.byDay,Day==48,Population=="HC")$Length,na.rm = T),col="#999999")
+lines(density(filter(stack.1.A.ex.byDay,Day==48,Population=="NF")$Length,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(stack.1.A.ex.byDay,Day==48,Population=="SS")$Length)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==48,Population=="HC")$Length)
+shapiro.test(filter(stack.1.A.ex.byDay,Day==48,Population=="NF")$Length)
+```
+
+```{r}
+Fig.Exp1.size <- ggplot(Shell.Size, aes(x=Day, y=mean.RelArea, group=Population)) + 
+  geom_errorbar(aes(ymin=Shell.Size$mean.RelArea-Shell.Size$se.RelArea,ymax=Shell.Size$mean.RelArea+Shell.Size$se.RelArea,color=Population), width=.07,position = position_dodge(width = 0.05)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.05)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.05))+
   xlab("Days") +
   ylab(expression(paste("Shell Relative Area"))) +
   theme_bw() + #Set the background color
@@ -72,17 +104,40 @@ Fig.Line.size <- ggplot(Shell.Size, aes(x=Day, y=mean.RelArea, group=Population)
         plot.background=element_blank(),  #Set the plot background
         legend.key = element_blank(),  #remove legend background
         legend.position=c(.2, .7)) + #set legend location
-  ggtitle("Juvenile Relative Shell Area") +
+  ggtitle("Juvenile Shell Relative Area") +
   theme(plot.title = element_text(face = 'bold', 
                                   size = 14, 
                                   hjust = 0))
-Fig.Line.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+Fig.Exp1.size <- Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+Fig.Exp1.size
+
+Fig.Exp1.size.L <- ggplot(Shell.Size, aes(x=Day, y=mean.RelLength, group=Population)) + 
+  geom_errorbar(aes(ymin=Shell.Size$mean.RelLength-Shell.Size$se.RelLength,ymax=Shell.Size$mean.RelLength+Shell.Size$se.RelLength,color=Population), width=.07,position = position_dodge(width = 0.05)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.05)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  xlab("Days") +
+  ylab(expression(paste("Shell Relative Length"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Juvenile Shell Relative Length") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size.L <- Fig.Exp1.size.L + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+Fig.Exp1.size.L
 ```
 ```{r}
 Fig.Exp1.size <- ggplot(Shell.Size, aes(x=Day, y=mean.Area, group=Population)) + 
-  geom_errorbar(aes(ymin=Shell.Size$mean.Area-Shell.Size$se.Area,ymax=Shell.Size$mean.Area+Shell.Size$se.Area,color=Population), width=.07,position = position_dodge(width = 0.1)) +
-  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.1)) +   
-  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  geom_errorbar(aes(ymin=Shell.Size$mean.Area-Shell.Size$se.Area,ymax=Shell.Size$mean.Area+Shell.Size$se.Area,color=Population), width=.07,position = position_dodge(width = 0.05)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.05)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.05))+
   xlab("Days") +
   ylab(expression(paste("Shell Area (mm^2)"))) +
   theme_bw() + #Set the background color
@@ -94,12 +149,34 @@ Fig.Exp1.size <- ggplot(Shell.Size, aes(x=Day, y=mean.Area, group=Population)) +
         plot.background=element_blank(),  #Set the plot background
         legend.key = element_blank(),  #remove legend background
         legend.position=c(.2, .7)) + #set legend location
-  ggtitle("Larvae Shell Area") +
+  ggtitle("Juvenile Shell Area") +
   theme(plot.title = element_text(face = 'bold', 
                                   size = 14, 
                                   hjust = 0))
-Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+Fig.Exp1.size <- Fig.Exp1.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+Fig.Exp1.size
 
+Fig.Exp1.size.L <- ggplot(Shell.Size, aes(x=Day, y=mean.Length, group=Population)) + 
+  geom_errorbar(aes(ymin=Shell.Size$mean.Length-Shell.Size$se.Length,ymax=Shell.Size$mean.Length+Shell.Size$se.Length,color=Population), width=.07,position = position_dodge(width = 0.05)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.05)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  xlab("Days") +
+  ylab(expression(paste("Shell Length (mm)"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Juvenile Shell Length") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Exp1.size.L <- Fig.Exp1.size.L + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+Fig.Exp1.size.L
 ```
 Significance testing for relative area, not taking Tray into account.
 ```{r}
@@ -120,19 +197,51 @@ E1.pairs <- cld(E1.lsm, alpha=.05, Letters=letters) #list pairwise tests and let
 E1.pairs #view results
 ```
 ## Linear mixed model methods:
-
-LMM on Day 1 Area, with Tray as random effect.
+ANOVA on Day 1. Does not take Tray into account
 ```{r}
 D1 <- filter(stack.1.A.ex.byDay, Day == 1)
+area.D1 <- aov(Area ~ Population, data=D1) #test the hypothesis relative size does not differ between treatments on Day 1
+area.D1.res <- anova(area.D1)
+area.D1.res
+
+area.D1 <- aov(log10(Area) ~ Population, data=D1) #test the hypothesis relative size does not differ between treatments on Day 1
+area.D1.res <- anova(area.D1)
+area.D1.res
+
+length.D1 <- aov(Length ~ Population, data=D1) #test the hypothesis relative size does not differ between treatments on Day 1
+length.D1.res <- anova(length.D1)
+length.D1.res
+
+length.D1 <- aov(log10(Length) ~ Population, data=D1) #test the hypothesis relative size does not differ between treatments on Day 1
+length.D1.res <- anova(length.D1)
+length.D1.res
+```
+LMM on Day 1 log-transformed Area, with Tray as random effect.
+```{r}
+D1 <- filter(stack.1.A.ex.byDay, Day == 1,Area > 0)
 area.model = lmer(log10(Area) ~ Population + (1|Tray),data=D1,na.action = na.omit)
 summary(area.model)
 area.null <- lmer(log10(Area) ~ (1|Tray),data=D1,REML=FALSE)
 area.model.R <- lmer(log10(Area) ~ Population + (1|Tray),data=D1,REML = F)
 anova(area.null,area.model.R)
-```
-Not significant.
 
-LMM on Day 48 Area, with Tray as random effect.
+afex.1 <- mixed(log10(Area) ~ Population + (1|Tray), data=D1,na.action = na.omit)
+print(afex.1)
+```
+p-value from afex is 0.05
+
+LMM on Day 1 log-transformed Length, with Tray as random effect.
+```{r}
+area.model = lmer(log10(Length) ~ Population + (1|Tray),data=D1,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(log10(Length) ~ (1|Tray),data=D1,REML=FALSE)
+area.model.R <- lmer(log10(Length) ~ Population + (1|Tray),data=D1,REML = F)
+anova(area.null,area.model.R)
+
+afex.1 <- mixed(log10(Length) ~ Population + (1|Tray), data=D1,na.action = na.omit)
+print(afex.1)
+```
+LMM on Day 48 log-transformed Area, with Tray as random effect.
 ```{r}
 D48 <- filter(stack.1.A.ex.byDay, Day == 48,Area > 1)
 area.model = lmer(log10(Area) ~ Population + (1|Tray),data=D48,na.action = na.omit)
@@ -140,10 +249,13 @@ summary(area.model)
 area.null <- lmer(log10(Area) ~ (1|Tray),data=D48,REML=FALSE)
 area.model.R <- lmer(log10(Area) ~ Population + (1|Tray),data=D48,REML = FALSE)
 anova(area.null,area.model.R)
-```
-p-value of 0.0134
 
-LMM on Day 48 relative area, with Tray as random effect.
+afex.1 <- mixed(log10(Area) ~ Population + (1|Tray), data=D48,na.action = na.omit)
+print(afex.1)
+```
+p-value of 0.0137 (likelihood), 0.003 (afex)
+
+LMM on Day 48 log-transformed relative area, with Tray as random effect.
 ```{r}
 D48 <- filter(stack.1.A.ex.byDay, Day == 48,Area > 1)
 relarea.model = lmer(log10(Relarea) ~ Population + (1|Tray),data=D48,na.action = na.omit)
@@ -151,8 +263,39 @@ summary(relarea.model)
 relarea.null <- lmer(log10(Relarea) ~ (1|Tray),data=D48,REML=FALSE)
 relarea.model.R <- lmer(log10(Relarea) ~ Population + (1|Tray),data=D48,REML = F)
 anova(relarea.null,relarea.model.R)
+
+afex.1 <- mixed(log10(Relarea) ~ Population + (1|Tray), data=D48,na.action = na.omit)
+print(afex.1)
 ```
-p-value is 0.08412
+p-value is 0.03 (afex), 0.0952 (likelihood)
+
+LMM on Day 48 log-transformed Length, with Tray as random effect.
+```{r}
+D48 <- filter(stack.1.A.ex.byDay, Day == 48,Area > 1)
+area.model = lmer(log10(Length) ~ Population + (1|Tray),data=D48,na.action = na.omit)
+summary(area.model)
+area.null <- lmer(log10(Length) ~ (1|Tray),data=D48,REML=FALSE)
+area.model.R <- lmer(log10(Length) ~ Population + (1|Tray),data=D48,REML = FALSE)
+anova(area.null,area.model.R)
+
+afex.1 <- mixed(log10(Length) ~ Population + (1|Tray), data=D48,na.action = na.omit)
+print(afex.1)
+```
+.0185 (likelihood), .002 (afex)
+
+LMM on Day 48 log-transformed relative length, with Tray as random effect.
+```{r}
+D48 <- filter(stack.1.A.ex.byDay, Day == 48,Area > 1)
+relarea.model = lmer(log10(RelLength) ~ Population + (1|Tray),data=D48,na.action = na.omit)
+summary(relarea.model)
+relarea.null <- lmer(log10(RelLength) ~ (1|Tray),data=D48,REML=FALSE)
+relarea.model.R <- lmer(log10(RelLength) ~ Population + (1|Tray),data=D48,REML = F)
+anova(relarea.null,relarea.model.R)
+
+afex.1 <- mixed(log10(RelLength) ~ Population + (1|Tray), data=D48,na.action = na.omit)
+print(afex.1)
+```
+Not significant
 
 Not log-transformed, Day 1 Area
 ```{r}
@@ -161,9 +304,10 @@ summary(area.model)
 area.null <- lmer(Area ~ (1|Tray),data=D1,REML=FALSE)
 area.model.R <- lmer(Area ~ Population + (1|Tray),data=D1,REML = F)
 anova(area.null,area.model.R)
-```
-Not significant
 
+afex.1 <- mixed(Area ~ Population + (1|Tray), data=D1,na.action = na.omit)
+print(afex.1)
+```
 Not log-transformed, Area Day 48
 ```{r}
 area.model = lmer(Area ~ Population + (1|Tray),data=D48,na.action = na.omit)
@@ -171,8 +315,11 @@ summary(area.model)
 area.null <- lmer(Area~ (1|Tray),data=D48,REML=FALSE)
 area.model.R <- lmer(Area ~ Population + (1|Tray),data=D48,REML = F)
 anova(area.null,area.model.R)
+
+afex.1 <- mixed(Area ~ Population + (1|Tray), data=D48,na.action = na.omit)
+print(afex.1)
 ```
-p-value is 0.002778
+p-value is 0.002778 (likelihood), .005 (afex)
 
 Not log-transformed, relative area Day 48
 ```{r}
@@ -181,18 +328,27 @@ summary(area.model)
 area.null <- lmer(Relarea~ (1|Tray),data=D48,REML=FALSE)
 area.model.R <- lmer(Relarea ~ Population + (1|Tray),data=D48,REML = F)
 anova(area.null,area.model.R)
+
+afex.1 <- mixed(Relarea ~ Population + (1|Tray), data=D48,na.action = na.omit)
+print(afex.1)
 ```
-p-value - 0.06747
+p-value = 0.06747, 0.09 (afex)
 ```{r}
 pairwise.t.test(D1$Area,D1$Population,p.adjust.method = "bonferroni")
 pairwise.t.test(D48$Area,D48$Population,p.adjust.method = "bonferroni")
 pairwise.t.test(D48$Relarea,D48$Population,p.adjust.method = "bonferroni")
 ```
-Kruskal and Wallis test, with Nemenyi post-hoc test
+Kruskal and Wallis test, with Nemenyi post-hoc test for area
 ```{r}
 posthoc.kruskal.nemenyi.test(D1$Area,D1$Population,dist="Chisquare")
 posthoc.kruskal.nemenyi.test(D48$Area,D48$Population,dist="Chisquare")
 posthoc.kruskal.nemenyi.test(D48$Relarea,D48$Population,dist="Chisquare")
+```
+Kruskal and Wallis test, with Nemenyi post-hoc test for length
+```{r}
+posthoc.kruskal.nemenyi.test(D1$Length,D1$Population,dist="Chisquare")
+posthoc.kruskal.nemenyi.test(D48$Length,D48$Population,dist="Chisquare")
+posthoc.kruskal.nemenyi.test(D48$RelLength,D48$Population,dist="Chisquare")
 ```
 Graphing distributioins at each day
 ```{r}
@@ -216,6 +372,39 @@ p.1014 <- ggplot(excludes.1014, aes(x=Population, y=Area.1014,fill=Population)) 
 p.1014
 
 ```
+
+Calculating shell area means from Day 1 for normalizations
+```{r}
+means.827 <- summarise(stack.1.A.ex, mean.area.827 = mean(Area.827, na.rm = TRUE), mean.length.827 = mean(Mean.length.827, na.rm=TRUE))
+mean.A.827.HC <- subset(means.827,Population =="HC" ,select=mean.area.827) #subset mean area for day 1 HC
+mean.A.827.SS <- subset(means.827,Population =="SS",select=mean.area.827) #subset mean area for day 1 SS
+mean.A.827.NF <- subset(means.827,Population =="NF",select=mean.area.827) #subset mean area for day 1 NF
+
+mean.A.827.HC.L <- subset(means.827,Population =="HC" ,select=mean.length.827) #subset mean area for day 1 HC
+mean.A.827.SS.L <- subset(means.827,Population =="SS",select=mean.length.827) #subset mean area for day 1 SS
+mean.A.827.NF.L <- subset(means.827,Population =="NF",select=mean.length.827) #subset mean area for day 1 NF
+```
+Normalize size at Day 48 by mean size per population at Day 1.
+```{r}
+A.norms <- function(x) {  #write function
+  if(x == "HC") y <- mean.A.827.HC #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "SS") y <- mean.A.827.SS #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "NF") y <- mean.A.827.NF #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  return(y) #return result
+}
+
+L.norms <- function(x) {  #write function
+  if(x == "HC") y <- mean.A.827.HC.L #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "SS") y <- mean.A.827.SS.L #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "NF") y <- mean.A.827.NF.L #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  return(y) #return result
+}
+stack.1.A.ex$A.norm <- as.numeric(sapply(stack.1.A.ex$Population,A.norms))
+stack.1.A.ex$L.norm <- as.numeric(sapply(stack.1.A.ex$Population,L.norms))
+stack.1.A.ex$A.rel.827 <- stack.1.A.ex$Area.827 /stack.1.A.ex$A.norm #normalize the area to be relative size
+stack.1.A.ex$A.rel.1014 <- stack.1.A.ex$Area.1014 /stack.1.A.ex$A.norm #normalize the area to be relative size
+stack.1.A.ex$L.rel.827 <- stack.1.A.ex$Mean.length.827 /stack.1.A.ex$L.norm #normalize the length to be relative size
+stack.1.A.ex$L.rel.1014 <- stack.1.A.ex$Mean.length.1014 /stack.1.A.ex$L.norm #normalize the lenth to be relative size
 
 Calculating Instantaneous growth.
 ```{r}
@@ -243,3 +432,36 @@ summary(area.model)
 area.model.R <- lmer(area.Igrowth ~ Population + (1|Tray),data=excludes.Growth,REML = F)
 anova(area.null,area.model.R)
 ```
+```{r}
+Fig.Line.size <- ggplot(Shell.Size, aes(x=Day, y=mean.RelArea, group=Population)) + 
+  geom_errorbar(aes(ymin=Shell.Size$mean.RelArea-Shell.Size$se.RelArea,ymax=Shell.Size$mean.RelArea+Shell.Size$se.RelArea,color=Population), width=.07,position = position_dodge(width = 0.1)) +
+  geom_line(aes(color=Population) ,size = 0.5,position = position_dodge(width = 0.1)) +   
+  geom_point(aes(shape=Population,color=Population), size = 3,position = position_dodge(width = 0.1))+
+  xlab("Days") +
+  ylab(expression(paste("Shell Relative Area"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1, size = 12), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.key = element_blank(),  #remove legend background
+        legend.position=c(.2, .7)) + #set legend location
+  ggtitle("Juvenile Relative Shell Area") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 14, 
+                                  hjust = 0))
+Fig.Line.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+```
+
+```{r}
+with(D1, plot(Area,Length,main = "Day 1 Shell Length vs. Shell Area"))
+abline(fit <- lm(Length~Area, data=D1), col='red')
+legend("bottomright", bty="n", legend=paste("R2 is",format(summary(fit)$adj.r.squared, digits=4)))
+
+with(D48, plot(Area,Length,main = "Day 48 Shell Length vs. Shell Area"))
+abline(fit <- lm(Length~Area, data=D48), col='red')
+legend("bottomright", bty="n", legend=paste("R2 is",format(summary(fit)$adj.r.squared, digits=4)))
+```
+
