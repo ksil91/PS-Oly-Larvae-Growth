@@ -5,6 +5,7 @@ Katherine Silliman
 -   [Setting up](#setting-up)
 -   [Day 1](#day-1)
 -   [Plotting Size through time](#plotting-size-through-time)
+-   [Testing for differences in size](#testing-for-differences-in-size)
     -   [Day 7](#day-7)
     -   [Day 14](#day-14)
 -   [Using Relative Area and Length](#using-relative-area-and-length)
@@ -361,7 +362,12 @@ Fig.L <- Fig.L + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
 Fig.L
 ```
 
-![](larvae_growth_2015_files/figure-markdown_github/unnamed-chunk-7-2.png) \# Testing for differences in size ANOVA of size at Day 1 to test if size differs accross populations at Day 1
+![](larvae_growth_2015_files/figure-markdown_github/unnamed-chunk-7-2.png)
+
+Testing for differences in size
+===============================
+
+ANOVA of size at Day 1 to test if size differs accross populations at Day 1
 
 ``` r
 G1.D1 <- filter(G1.all, Date == "7-1-15")
