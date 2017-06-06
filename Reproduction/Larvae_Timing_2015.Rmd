@@ -1,0 +1,388 @@
+---
+title: "Puget Sound Reproduction 2015"
+author: "Katherine Silliman"
+output:
+  github_document:
+    toc: yes
+---
+```{r, message=FALSE}
+library(ggplot2) #for plotting
+library(dplyr) #Data summary
+library(plotrix)#for SE calculation
+library("grid") #for plotting
+library(PMCMR) #Kruskal-Wallis test
+```
+#Read in data
+```{r}
+larvae = read.csv("Larval counts - Day 1-By Family.csv", header = TRUE)
+pop_larvae <- subset(larvae, select = c(Date,Population,Family,Total.Larvae,Total.per.capita)) %>% filter(Family != "") %>% group_by(Date,Population)
+pop_larvae$Date <- as.Date(pop_larvae$Date, "%m/%d/%Y")
+pop_larvae <- arrange(pop_larvae, Date) %>% mutate(CalDay = format(Date,"%j"))
+#pop_l_na <- na.omit(pop_Total_Date)
+
+#Calculate total larvae released across families
+pop_total <- summarise(pop_larvae, total.by.date = sum(Total.Larvae))
+
+percap.norms <- function(x) {  #write function
+  if(x == "Oyster Bay (SS)") y <- 99 
+  if(x == "Dabob Bay (HC)") y <- 94 
+  if(x == "Fidalgo Bay (NF)") y <- 99 
+  return(y) #return result
+}
+pop_total$percap.norm <- as.numeric(sapply(pop_total$Population,percap.norms))
+pop_total$total.per.cap <- pop_total$total.by.date/pop_total$percap.norm 
+#Calculate cumulative larvae released through time
+pop_total <- group_by(pop_total, Population) %>% mutate(cum.total=cumsum(total.by.date),cum.percap = cumsum(total.per.cap),CalDay = format(Date,"%j")) %>% arrange(Date) %>% select(Date,CalDay,Population,total.by.date,total.per.cap,cum.total,cum.percap)
+pop_total
+```
+
+# Make Graphs
+Stacked graphs of cumulative larvae through time and number of larvae released by date
+```{r}
+b <- ggplot(data=pop_total, aes(x=Date, y=total.by.date, group=Population, fill=Population)) + 
+  geom_bar(stat="identity",position=position_dodge()) + ylab("Number of Larve Released")+
+  ggtitle("Timing of Larvae Release by Population") + 
+  scale_x_date(date_breaks = "1 week",date_labels ="%b-%d")+
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+theme_bw() 
+
+l <- ggplot(data=pop_total, aes(x=Date, y=cum.total, group=Population, colour=Population)) +
+  geom_line() + geom_point() + ylab("Number of Larve Released") +
+  scale_x_date(date_breaks = "1 week",date_labels ="%b-%d")+
+  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))+theme_bw() 
+grid.newpage()
+grid.draw(rbind(ggplotGrob(b),ggplotGrob(l),size="last"))
+```
+
+
+```{r}
+bb <- ggplot(data=pop_total, aes(x=Date, y=total.per.cap, group=Population, fill=Population)) + 
+  geom_bar(stat="identity",position=position_dodge()) + ylab("Number of Larve Released")+
+  ggtitle("Timing of Larvae Per Capita Release by Population") + 
+  scale_x_date(date_breaks = "1 week",date_labels ="%b-%d")+
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+theme_bw() 
+
+ll <- ggplot(data=pop_total, aes(x=Date, y=cum.percap, group=Population, colour=Population)) +
+  geom_line() + geom_point() + ylab("Number of Larve Released") +
+  scale_x_date(date_breaks = "1 week",date_labels ="%b-%d")+
+  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))+theme_bw() 
+grid.newpage()
+grid.draw(rbind(ggplotGrob(bb),ggplotGrob(ll),size="last"))
+```
+
+
+Make graph with cumulative larvae overlaying bar graph
+```{r}
+b <- b + geom_line(data=pop_total, aes(x=Date, y=cum.total/4, group=Population, colour=Population)) +
+  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))+theme_bw() +
+  scale_y_continuous(sec.axis = sec_axis(~.*4,name="Cumulative Larvae Released"))
+b
+```
+Make graph with cumulative larvae overlaying bar graph
+```{r}
+bb <- bb + geom_line(data=pop_total, aes(x=Date, y=cum.percap/4, group=Population, colour=Population)) +
+  scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))+theme_bw() +
+  scale_y_continuous(sec.axis = sec_axis(~.*4,name="Cumulative Larvae Released"))
+bb
+```
+
+#Using family as replicates
+```{r}
+family_larvae <- group_by(pop_larvae,Family) %>% filter(Family !="")
+fam.sum <- summarize(family_larvae, overall_Total = sum(Total.Larvae, na.rm = T), mean.larvae = mean(Total.Larvae,na.rm=T), se.larvae = std.error(Total.Larvae,na.rm=T), mean.percap = mean(Total.per.capita,na.rm=T), total.percap = sum(Total.per.capita,na.rm=T), maxday = as.numeric(CalDay[which.max(Total.Larvae)]), max = max(Total.Larvae), max.percap = max(Total.per.capita), Population = first(Population), first.big = as.numeric(CalDay[which(Total.Larvae > 0)[1]]))
+fam.sum
+```
+## Anova and Tukey HSD
+```{r}
+print("Total larvae per oyster")
+total.cap <- aov(total.percap ~ Population, data=fam.sum)
+summary(total.cap)
+TukeyHSD(total.cap)
+qplot(Population, total.percap, data=fam.sum, geom="boxplot") +ggtitle("Total larvae per oyster")
+```
+```{r}
+print("Total larvae overall")
+overall <- aov(overall_Total ~ Population, data=fam.sum)
+summary(overall)
+TukeyHSD(overall)
+qplot(Population, overall_Total, data=fam.sum, geom="boxplot")+ggtitle("Total larvae overall")
+```
+```{r}
+print("Calendar day of maximum larvae output")
+maxday <- aov(maxday ~ Population, data=fam.sum)
+summary(maxday)
+TukeyHSD(maxday)
+qplot(Population, maxday, data=fam.sum, geom="boxplot")+ggtitle("Calendar day of max output")
+```
+```{r}
+print("Maximum larvae produced on one day, per oyster")
+max <- aov(max.percap ~ Population, data=fam.sum)
+summary(max)
+TukeyHSD(max)
+qplot(Population, max.percap, data=fam.sum, geom="boxplot")+ggtitle("Maximum amount output per oyster")
+```
+
+```{r}
+print("Calendar day of 1st larval output")
+firstday <- aov(first.big ~ Population, data=fam.sum)
+summary(firstday)
+TukeyHSD(firstday)
+qplot(Population, first.big, data=fam.sum, geom="boxplot")+ggtitle("Calendar day of first output")
+```
+
+Significant: 
+* maximum larvae produced on one day (per oyster): p = 0.0492, SS-NF: 0.04303
+* Total larvae overall: p = 0.0565, SS-NF = 0.0559
+* Total larvae overall per oyster: p = 0.0412, SS-NF.0488, NF-HC: 0.0944
+
+## 2-way ANOVA 
+on square-root transformed Total Larvae with Population and calendar date as factors
+```{r}
+x <- aov(sqrt(Total.Larvae) ~ Population*CalDay,data=family_larvae)
+summary(x)
+TukeyHSD(x)$Population
+
+y <- data.frame(TukeyHSD(x)$'Population:CalDay')
+colnames(y)< c("diff","lwr","upr","p.adj")
+cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
+
+y <- data.frame(TukeyHSD(x)$'CalDay')
+colnames(y)< c("diff","lwr","upr","p.adj")
+cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
+```
+
+2-way ANOVA on square-root transformed total larvae per oyster with Population and calendar date as factors
+```{r}
+x <- aov(sqrt(Total.per.capita) ~ Population*CalDay,data=family_larvae)
+summary(x)
+TukeyHSD(x)$Population
+
+y <- data.frame(TukeyHSD(x)$'Population:CalDay')
+colnames(y)< c("diff","lwr","upr","p.adj")
+cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
+
+y <- data.frame(TukeyHSD(x)$'CalDay')
+colnames(y)< c("diff","lwr","upr","p.adj")
+cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
+```
+## Checking for normal distribution
+Checking for normal distribution in total overall larvae
+```{r}
+plot(density(filter(fam.sum,Population=="Oyster Bay (SS)")$overall_Total,na.rm = T),col="#56B4E9" ,main ="Overall",ylim=c(0,0.000012))
+lines(density(filter(fam.sum,Population=="Dabob Bay (HC)")$overall_Total,na.rm = T),col="#999999")
+lines(density(filter(fam.sum,Population=="Fidalgo Bay (NF)")$overall_Total,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(fam.sum,Population=="Dabob Bay (HC)")$overall_Total)
+shapiro.test(filter(fam.sum,Population=="Fidalgo Bay (NF)")$overall_Total)
+shapiro.test(filter(fam.sum,Population=="Oyster Bay (SS)")$overall_Total)
+```
+
+Checking for normal distribution in total larvae produced per oyster
+```{r}
+plot(density(filter(fam.sum,Population=="Oyster Bay (SS)")$total.percap,na.rm = T),col="#56B4E9" ,main ="Overall",ylim=c(0,0.00015))
+lines(density(filter(fam.sum,Population=="Dabob Bay (HC)")$total.percap,na.rm = T),col="#999999")
+lines(density(filter(fam.sum,Population=="Fidalgo Bay (NF)")$total.percap,na.rm = T),col="#E69F00")
+
+shapiro.test(filter(fam.sum,Population=="Dabob Bay (HC)")$total.percap)
+shapiro.test(filter(fam.sum,Population=="Fidalgo Bay (NF)")$total.percap)
+shapiro.test(filter(fam.sum,Population=="Oyster Bay (SS)")$total.percap)
+```
+
+## Test for differences among populations
+```{r}
+kruskal.test(total.percap~Population,data = fam.sum) # Kruskal-Wallis test
+pairwise.t.test(fam.sum$total.percap,fam.sum$Population,p.adjust.method = "bonferroni")
+```
+```{r}
+kruskal.test(overall_Total~Population,data = fam.sum) # Kruskal-Wallis test
+pairwise.t.test(fam.sum$overall_Total,fam.sum$Population,p.adjust.method = "bonferroni")
+```
+```{r}
+kruskal.test(maxday~Population,data = fam.sum) # Kruskal-Wallis test
+pairwise.t.test(fam.sum$maxday,fam.sum$Population,p.adjust.method = "bonferroni")
+```
+```{r}
+kruskal.test(max.percap~Population,data = fam.sum) # Kruskal-Wallis test
+pairwise.t.test(fam.sum$max.percap,fam.sum$Population,p.adjust.method = "bonferroni")
+```
+## GLM method (not pursuing)
+```{r}
+#making NF matrix
+NF1 = filter(family_larvae, Family == "NF1") %>% ungroup() %>% select(Date,Total.Larvae)
+NF2 = filter(family_larvae, Family == "NF2") %>% ungroup() %>% select(Total.Larvae)
+NF3 = filter(family_larvae, Family == "NF3") %>% ungroup() %>% select(Total.Larvae)
+NF4 = filter(family_larvae, Family == "NF4") %>% ungroup() %>% select(Total.Larvae)
+NF5 = filter(family_larvae, Family == "NF5") %>% ungroup() %>% select(Total.Larvae)
+
+NF <- cbind(NF1,NF2,NF3,NF4,NF5)
+colnames(NF) <- c("Date","NF1","NF2","NF3","NF4","NF5")
+NF.binary <- as.data.frame(apply(NF>0, FUN=as.integer,2))
+#Making SS matrix
+SS1 = filter(family_larvae, Family == "SS1") %>% ungroup() %>% select(Date,Total.Larvae)
+SS2 = filter(family_larvae, Family == "SS2") %>% ungroup() %>% select(Total.Larvae)
+SS3 = filter(family_larvae, Family == "SS3") %>% ungroup() %>% select(Total.Larvae)
+SS4 = filter(family_larvae, Family == "SS4") %>% ungroup() %>% select(Total.Larvae)
+SS5 = filter(family_larvae, Family == "SS5") %>% ungroup() %>% select(Total.Larvae)
+
+SS <- cbind(SS1,SS2,SS3,SS4,SS5)
+colnames(SS) <- c("Date","SS1","SS2","SS3","SS4","SS5")
+SS.binary <- as.data.frame(apply(SS>0, FUN=as.integer,2))
+
+#Iterative glm of SS families
+glm.fit.SS <- glm(SS1~SS2+SS3+SS4+SS5,data=SS.binary,family=binomial())
+SS.glms <- list(SS1 =glm.fit.SS)
+SS.glms.logLik <- list(SS1=logLik(glm.fit.SS))
+glm.fit.SS <- glm(SS2~SS1+SS3+SS4+SS5,data=SS.binary,family=binomial())
+SS.glms <- c(SS.glms,list(SS2=glm.fit.SS))
+SS.glms.logLik <- c(SS.glms.logLik,list(SS2=logLik(glm.fit.SS)))
+glm.fit.SS <- glm(SS3~SS1+SS2+SS4+SS5,data=SS.binary,family=binomial())
+SS.glms <- c(SS.glms,list(SS3=glm.fit.SS))
+SS.glms.logLik <- c(SS.glms.logLik,list(SS3=logLik(glm.fit.SS)))
+glm.fit.SS <- glm(SS4~SS1+SS2+SS3+SS5,data=SS.binary,family=binomial())
+SS.glms <- c(SS.glms,list(SS4=glm.fit.SS))
+SS.glms.logLik <- c(SS.glms.logLik,list(SS4=logLik(glm.fit.SS)))
+glm.fit.SS <- glm(SS5~SS1+SS2+SS3+SS4,data=SS.binary,family=binomial())
+SS.glms <- c(SS.glms,list(SS5=glm.fit.SS))
+SS.glms.logLik <- c(SS.glms.logLik,list(SS5=logLik(glm.fit.SS)))
+SS.glms.logLik
+```
+```{r}
+#Iterative glm of SS families
+SS.tran <- sqrt(SS[,2:6])
+lm.fit.SS <- lm(SS1~SS2+SS3+SS4+SS5,data=SS.tran)
+SS.lms <- list(SS1 =lm.fit.SS)
+SS.lms.logLik <- list(SS1=logLik(lm.fit.SS))
+lm.fit.SS <- lm(SS2~SS1+SS3+SS4+SS5,data=SS.tran)
+SS.lms <- c(SS.lms,list(SS2=lm.fit.SS))
+SS.lms.logLik <- c(SS.lms.logLik,list(SS2=logLik(lm.fit.SS)))
+lm.fit.SS <- lm(SS3~SS1+SS2+SS4+SS5,data=SS.tran)
+SS.lms <- c(SS.lms,list(SS3=lm.fit.SS))
+SS.lms.logLik <- c(SS.lms.logLik,list(SS3=logLik(lm.fit.SS)))
+lm.fit.SS <- lm(SS4~SS1+SS2+SS3+SS5,data=SS.tran)
+SS.lms <- c(SS.lms,list(SS4=lm.fit.SS))
+SS.lms.logLik <- c(SS.lms.logLik,list(SS4=logLik(lm.fit.SS)))
+lm.fit.SS <- lm(SS5~SS1+SS2+SS3+SS4,data=SS.tran)
+SS.lms <- c(SS.lms,list(SS5=lm.fit.SS))
+SS.lms.logLik <- c(SS.lms.logLik,list(SS5=logLik(lm.fit.SS)))
+SS.lms.logLik
+```
+
+```{r}
+#Iterative glm of NF families
+glm.fit <- glm(NF1~NF2+NF3+NF4+NF5,data=NF.binary,family=binomial())
+NF.glms <- list(NF1 =glm.fit)
+NF.glms.logLik <- list(NF1=logLik(glm.fit))
+glm.fit <- glm(NF2~NF1+NF3+NF4+NF5,data=NF.binary,family=binomial())
+NF.glms <- c(NF.glms,list(NF2=glm.fit))
+NF.glms.logLik <- c(NF.glms.logLik,list(NF2=logLik(glm.fit)))
+glm.fit <- glm(NF3~NF1+NF2+NF4+NF5,data=NF.binary,family=binomial())
+NF.glms <- c(NF.glms,list(NF3=glm.fit))
+NF.glms.logLik <- c(NF.glms.logLik,list(NF3=logLik(glm.fit)))
+glm.fit <- glm(NF4~NF1+NF2+NF3+NF5,data=NF.binary,family=binomial())
+NF.glms <- c(NF.glms,list(NF4=glm.fit))
+NF.glms.logLik <- c(NF.glms.logLik,list(NF4=logLik(glm.fit)))
+glm.fit <- glm(NF5~NF1+NF2+NF3+NF4,data=NF.binary,family=binomial())
+NF.glms <- c(NF.glms,list(NF5=glm.fit))
+NF.glms.logLik <- c(NF.glms.logLik,list(NF5=logLik(glm.fit)))
+NF.glms.logLik
+#logLik(glm.fit.SS2NF)
+#pop+environment for each bucket, not directly measuring environment
+```
+```{r}
+#Iterative lm of NF families
+NF.tran <- sqrt(NF[,2:6])
+lm.fit <- lm(NF1~NF2+NF3+NF4+NF5,data=NF.tran)
+NF.lms <- list(NF1 =lm.fit)
+NF.lms.logLik <- list(NF1=logLik(lm.fit))
+lm.fit <- lm(NF2~NF1+NF3+NF4+NF5,data=NF.tran)
+NF.lms <- c(NF.lms,list(NF2=lm.fit))
+NF.lms.logLik <- c(NF.lms.logLik,list(NF2=logLik(lm.fit)))
+lm.fit <- lm(NF3~NF1+NF2+NF4+NF5,data=NF.tran)
+NF.lms <- c(NF.lms,list(NF3=lm.fit))
+NF.lms.logLik <- c(NF.lms.logLik,list(NF3=logLik(lm.fit)))
+lm.fit <- lm(NF4~NF1+NF2+NF3+NF5,data=NF.tran)
+NF.lms <- c(NF.lms,list(NF4=lm.fit))
+NF.lms.logLik <- c(NF.lms.logLik,list(NF4=logLik(lm.fit)))
+lm.fit <- lm(NF5~NF1+NF2+NF3+NF4,data=NF.tran)
+NF.lms <- c(NF.lms,list(NF5=lm.fit))
+NF.lms.logLik <- c(NF.lms.logLik,list(NF5=logLik(lm.fit)))
+NF.lms.logLik
+```
+
+
+```{r}
+#Iterative glm of NF families against all SS familie
+glm.fit.SS <- glm(NF.binary$NF1~SS1+SS2+SS3+SS4+SS5,data=SS.binary,family=binomial())
+NF2SS.glms <- list(NF1 =glm.fit.SS)
+NF2SS.glms.logLik <- list(NF1=logLik(glm.fit.SS))
+glm.fit.SS <- glm(NF.binary$NF2~SS1+SS2+SS3+SS4+SS5,data=SS.binary,family=binomial())
+NF2SS.glms <- c(NF2SS.glms,list(NF2 =glm.fit.SS))
+NF2SS.glms.logLik <- c(NF2SS.glms.logLik,list(NF2=logLik(glm.fit.SS)))
+glm.fit.SS <- glm(NF.binary$NF3~SS1+SS2+SS3+SS4+SS5,data=SS.binary,family=binomial())
+NF2SS.glms <- c(NF2SS.glms,list(NF3 =glm.fit.SS))
+NF2SS.glms.logLik <- c(NF2SS.glms.logLik,list(NF3=logLik(glm.fit.SS)))
+glm.fit.SS <- glm(NF.binary$NF4~SS1+SS2+SS3+SS4+SS5,data=SS.binary,family=binomial())
+NF2SS.glms <- c(NF2SS.glms,list(NF4 =glm.fit.SS))
+NF2SS.glms.logLik <- c(NF2SS.glms.logLik,list(NF4=logLik(glm.fit.SS)))
+glm.fit.SS <- glm(NF.binary$NF5~SS1+SS2+SS3+SS4+SS5,data=SS.binary,family=binomial())
+NF2SS.glms <- c(NF2SS.glms,list(NF5 =glm.fit.SS))
+NF2SS.glms.logLik <- c(NF2SS.glms.logLik,list(NF5=logLik(glm.fit.SS)))
+cbind(NF2SS.glms.logLik,NF.glms.logLik)
+```
+```{r}
+#Iterative glm of NF families against all SS familie
+lm.fit.SS <- lm(NF.tran$NF1~SS1+SS2+SS3+SS4+SS5,data=SS.tran)
+NF2SS.lms <- list(NF1 =lm.fit.SS)
+NF2SS.lms.logLik <- list(NF1=logLik(lm.fit.SS))
+lm.fit.SS <- lm(NF.tran$NF2~SS1+SS2+SS3+SS4+SS5,data=SS.tran)
+NF2SS.lms <- c(NF2SS.lms,list(NF2 =lm.fit.SS))
+NF2SS.lms.logLik <- c(NF2SS.lms.logLik,list(NF2=logLik(lm.fit.SS)))
+lm.fit.SS <- lm(NF.tran$NF3~SS1+SS2+SS3+SS4+SS5,data=SS.tran)
+NF2SS.lms <- c(NF2SS.lms,list(NF3 =lm.fit.SS))
+NF2SS.lms.logLik <- c(NF2SS.lms.logLik,list(NF3=logLik(lm.fit.SS)))
+lm.fit.SS <- lm(NF.tran$NF4~SS1+SS2+SS3+SS4+SS5,data=SS.tran)
+NF2SS.lms <- c(NF2SS.lms,list(NF4 =lm.fit.SS))
+NF2SS.lms.logLik <- c(NF2SS.lms.logLik,list(NF4=logLik(lm.fit.SS)))
+lm.fit.SS <- lm(NF.tran$NF5~SS1+SS2+SS3+SS4+SS5,data=SS.tran)
+NF2SS.lms <- c(NF2SS.lms,list(NF5 =lm.fit.SS))
+NF2SS.lms.logLik <- c(NF2SS.lms.logLik,list(NF5=logLik(lm.fit.SS)))
+cbind(NF2SS.lms.logLik,NF.lms.logLik)
+```
+
+```{r}
+#Iterative glm of SS families against all NF families
+glm.fit <- glm(SS.binary$SS1~NF1+NF2+NF3+NF4+NF5,data=NF.binary,family=binomial())
+SS2NF.glms <- list(SS1 =glm.fit)
+SS2NF.glms.logLik <- list(SS1=logLik(glm.fit))
+glm.fit <- glm(SS.binary$SS2~NF1+NF2+NF3+NF4+NF5,data=NF.binary,family=binomial())
+SS2NF.glms <- c(SS2NF.glms, list(SS2 =glm.fit))
+SS2NF.glms.logLik <- c(SS2NF.glms.logLik,list(SS2=logLik(glm.fit)))
+glm.fit <- glm(SS.binary$SS3~NF1+NF2+NF3+NF4+NF5,data=NF.binary,family=binomial())
+SS2NF.glms <- c(SS2NF.glms, list(SS3 =glm.fit))
+SS2NF.glms.logLik <- c(SS2NF.glms.logLik,list(SS3=logLik(glm.fit)))
+glm.fit <- glm(SS.binary$SS4~NF1+NF2+NF3+NF4+NF5,data=NF.binary,family=binomial())
+SS2NF.glms <- c(SS2NF.glms, list(SS4 =glm.fit))
+SS2NF.glms.logLik <- c(SS2NF.glms.logLik,list(SS4=logLik(glm.fit)))
+glm.fit <- glm(SS.binary$SS5~NF1+NF2+NF3+NF4+NF5,data=NF.binary,family=binomial())
+SS2NF.glms <- c(SS2NF.glms, list(SS5 =glm.fit))
+SS2NF.glms.logLik <- c(SS2NF.glms.logLik,list(SS5=logLik(glm.fit)))
+cbind(SS2NF.glms.logLik,SS.glms.logLik)
+```
+```{r}
+#Iterative lm of SS families against all NF families
+lm.fit <- lm(SS.tran$SS1~NF1+NF2+NF3+NF4+NF5,data=NF.tran)
+SS2NF.lms <- list(SS1 =lm.fit)
+SS2NF.lms.logLik <- list(SS1=logLik(lm.fit))
+lm.fit <- lm(SS.tran$SS2~NF1+NF2+NF3+NF4+NF5,data=NF.tran)
+SS2NF.lms <- c(SS2NF.lms,list(SS2 =lm.fit))
+SS2NF.lms.logLik <- c(SS2NF.lms.logLik,list(SS2=logLik(lm.fit)))
+lm.fit <- lm(SS.tran$SS3~NF1+NF2+NF3+NF4+NF5,data=NF.tran)
+SS2NF.lms <- c(SS2NF.lms,list(SS3 =lm.fit))
+SS2NF.lms.logLik <- c(SS2NF.lms.logLik,list(SS3=logLik(lm.fit)))
+lm.fit <- lm(SS.tran$SS4~NF1+NF2+NF3+NF4+NF5,data=NF.tran)
+SS2NF.lms <- c(SS2NF.lms,list(SS4 =lm.fit))
+SS2NF.lms.logLik <- c(SS2NF.lms.logLik,list(SS4=logLik(lm.fit)))
+lm.fit <- lm(SS.tran$SS5~NF1+NF2+NF3+NF4+NF5,data=NF.tran)
+SS2NF.lms <- c(SS2NF.lms,list(SS5 =lm.fit))
+SS2NF.lms.logLik <- c(SS2NF.lms.logLik,list(SS5=logLik(lm.fit)))
+cbind(SS2NF.lms.logLik,SS.lms.logLik)
+```
