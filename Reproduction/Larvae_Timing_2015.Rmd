@@ -5,20 +5,23 @@ output:
   github_document:
     toc: yes
 ---
-```{r, message=FALSE}
+
+```{r, message=F}
 library(ggplot2) #for plotting
 library(dplyr) #Data summary
 library(plotrix)#for SE calculation
-library("grid") #for plotting
+library(grid) #for plotting
 library(PMCMR) #Kruskal-Wallis test
 ```
 #Read in data
 ```{r}
-larvae = read.csv("Larval counts - Day 1-By Family.csv", header = TRUE)
-pop_larvae <- subset(larvae, select = c(Date,Population,Family,Total.Larvae,Total.per.capita)) %>% filter(Family != "") %>% group_by(Date,Population)
+larvae = read.csv("F:/ksilliman/Projects/PS_CommonG/Analysis/Phenotype/Larval counts - Day 1-By Family.csv", header = TRUE)
+pop_larvae <- subset(larvae, select = c(Date,Population,Family,Total.Larvae,Total.per.capita)) %>% 
+  filter(Family != "") %>% 
+  group_by(Date,Population)
 pop_larvae$Date <- as.Date(pop_larvae$Date, "%m/%d/%Y")
-pop_larvae <- arrange(pop_larvae, Date) %>% mutate(CalDay = format(Date,"%j"))
-#pop_l_na <- na.omit(pop_Total_Date)
+pop_larvae <- arrange(pop_larvae, Date) %>% 
+  mutate(CalDay = format(Date,"%j"))
 
 #Calculate total larvae released across families
 pop_total <- summarise(pop_larvae, total.by.date = sum(Total.Larvae))
@@ -97,7 +100,10 @@ print("Total larvae per oyster")
 total.cap <- aov(total.percap ~ Population, data=fam.sum)
 summary(total.cap)
 TukeyHSD(total.cap)
-qplot(Population, total.percap, data=fam.sum, geom="boxplot") +ggtitle("Total larvae per oyster")
+tc.plot <- ggplot(fam.sum, aes(x=Population, y=total.percap,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.05,fill="white") + labs(title="Cumulative Larvae",y=expression("Cumulative Larvae")) + theme_bw(base_size = 14)+theme(title = element_text(size = 18))
+tc.plot
+
 ```
 ```{r}
 print("Total larvae overall")
@@ -126,7 +132,9 @@ print("Calendar day of 1st larval output")
 firstday <- aov(first.big ~ Population, data=fam.sum)
 summary(firstday)
 TukeyHSD(firstday)
-qplot(Population, first.big, data=fam.sum, geom="boxplot")+ggtitle("Calendar day of first output")
+fd.plot <- ggplot(fam.sum, aes(x=Population, y=first.big,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.05,fill="white") + labs(title="Date of First Larval Release",y="Calendar Day") + theme_bw(base_size = 14)+theme(title = element_text(size = 18))
+fd.plot
 ```
 
 Significant: 
@@ -385,4 +393,3 @@ lm.fit <- lm(SS.tran$SS5~NF1+NF2+NF3+NF4+NF5,data=NF.tran)
 SS2NF.lms <- c(SS2NF.lms,list(SS5 =lm.fit))
 SS2NF.lms.logLik <- c(SS2NF.lms.logLik,list(SS5=logLik(lm.fit)))
 cbind(SS2NF.lms.logLik,SS.lms.logLik)
-```
