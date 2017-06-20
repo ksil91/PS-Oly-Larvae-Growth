@@ -13,21 +13,35 @@ Katherine Silliman
 
 ``` r
 library(ggplot2) #for plotting
+```
+
+    ## Warning: package 'ggplot2' was built under R version 3.3.3
+
+``` r
 library(dplyr) #Data summary
 library(plotrix)#for SE calculation
-library("grid") #for plotting
+```
+
+    ## Warning: package 'plotrix' was built under R version 3.3.3
+
+``` r
+library(grid) #for plotting
 library(PMCMR) #Kruskal-Wallis test
 ```
+
+    ## Warning: package 'PMCMR' was built under R version 3.3.3
 
 Read in data
 ============
 
 ``` r
-larvae = read.csv("Larval counts - Day 1-By Family.csv", header = TRUE)
-pop_larvae <- subset(larvae, select = c(Date,Population,Family,Total.Larvae,Total.per.capita)) %>% filter(Family != "") %>% group_by(Date,Population)
+larvae = read.csv("F:/ksilliman/Projects/PS_CommonG/Analysis/Phenotype/Larval counts - Day 1-By Family.csv", header = TRUE)
+pop_larvae <- subset(larvae, select = c(Date,Population,Family,Total.Larvae,Total.per.capita)) %>% 
+  filter(Family != "") %>% 
+  group_by(Date,Population)
 pop_larvae$Date <- as.Date(pop_larvae$Date, "%m/%d/%Y")
-pop_larvae <- arrange(pop_larvae, Date) %>% mutate(CalDay = format(Date,"%j"))
-#pop_l_na <- na.omit(pop_Total_Date)
+pop_larvae <- arrange(pop_larvae, Date) %>% 
+  mutate(CalDay = format(Date,"%j"))
 
 #Calculate total larvae released across families
 pop_total <- summarise(pop_larvae, total.by.date = sum(Total.Larvae))
@@ -193,7 +207,9 @@ TukeyHSD(total.cap)
     ## Oyster Bay (SS)-Fidalgo Bay (NF) 0.0499476
 
 ``` r
-qplot(Population, total.percap, data=fam.sum, geom="boxplot") +ggtitle("Total larvae per oyster")
+tc.plot <- ggplot(fam.sum, aes(x=Population, y=total.percap,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.05,fill="white") + labs(title="Cumulative Larvae",y=expression("Cumulative Larvae")) + theme_bw(base_size = 14)+theme(title = element_text(size = 18))
+tc.plot
 ```
 
 ![](Larvae_Timing_2015_files/figure-markdown_github/unnamed-chunk-8-1.png)
@@ -343,7 +359,9 @@ TukeyHSD(firstday)
     ## Oyster Bay (SS)-Fidalgo Bay (NF) -10.2 -20.101093 -0.2989066 0.0433809
 
 ``` r
-qplot(Population, first.big, data=fam.sum, geom="boxplot")+ggtitle("Calendar day of first output")
+fd.plot <- ggplot(fam.sum, aes(x=Population, y=first.big,fill=Population)) + 
+  geom_violin(trim=FALSE) + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + geom_boxplot(width=0.05,fill="white") + labs(title="Date of First Larval Release",y="Calendar Day") + theme_bw(base_size = 14)+theme(title = element_text(size = 18))
+fd.plot
 ```
 
 ![](Larvae_Timing_2015_files/figure-markdown_github/unnamed-chunk-12-1.png)
@@ -406,9 +424,9 @@ cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
 ```
 
     ##      [,1]      [,2]                
-    ## [1,] "203-180" "0.0677426897180263"
-    ## [2,] "209-180" "0.05969449290644"  
-    ## [3,] "203-198" "0.0981909127255646"
+    ## [1,] "203-180" "0.0677426897180261"
+    ## [2,] "209-180" "0.0596944929064401"
+    ## [3,] "203-198" "0.0981909127255648"
     ## [4,] "209-198" "0.0871906635251152"
 
 2-way ANOVA on square-root transformed total larvae per oyster with Population and calendar date as factors
@@ -451,18 +469,18 @@ cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
 ```
 
     ##       [,1]                                      [,2]                
-    ##  [1,] "Dabob Bay (HC):186-Fidalgo Bay (NF):170" "0.0856947061197415"
+    ##  [1,] "Dabob Bay (HC):186-Fidalgo Bay (NF):170" "0.0856947061197417"
     ##  [2,] "Dabob Bay (HC):186-Fidalgo Bay (NF):173" "0.085694706119734" 
-    ##  [3,] "Dabob Bay (HC):186-Fidalgo Bay (NF):176" "0.0856947061197328"
-    ##  [4,] "Dabob Bay (HC):186-Fidalgo Bay (NF):180" "0.0856947061197333"
-    ##  [5,] "Dabob Bay (HC):186-Fidalgo Bay (NF):181" "0.0856947061197331"
-    ##  [6,] "Dabob Bay (HC):186-Oyster Bay (SS):184"  "0.0856947061197335"
-    ##  [7,] "Fidalgo Bay (NF):196-Dabob Bay (HC):186" "0.0856947061197342"
-    ##  [8,] "Fidalgo Bay (NF):203-Dabob Bay (HC):186" "0.0856947061197337"
-    ##  [9,] "Oyster Bay (SS):203-Dabob Bay (HC):186"  "0.0856947061197336"
-    ## [10,] "Dabob Bay (HC):209-Dabob Bay (HC):186"   "0.0856947061197333"
-    ## [11,] "Fidalgo Bay (NF):209-Dabob Bay (HC):186" "0.0856947061197331"
-    ## [12,] "Fidalgo Bay (NF):210-Dabob Bay (HC):186" "0.0856947061197333"
+    ##  [3,] "Dabob Bay (HC):186-Fidalgo Bay (NF):176" "0.0856947061197331"
+    ##  [4,] "Dabob Bay (HC):186-Fidalgo Bay (NF):180" "0.0856947061197335"
+    ##  [5,] "Dabob Bay (HC):186-Fidalgo Bay (NF):181" "0.0856947061197332"
+    ##  [6,] "Dabob Bay (HC):186-Oyster Bay (SS):184"  "0.0856947061197337"
+    ##  [7,] "Fidalgo Bay (NF):196-Dabob Bay (HC):186" "0.0856947061197343"
+    ##  [8,] "Fidalgo Bay (NF):203-Dabob Bay (HC):186" "0.085694706119734" 
+    ##  [9,] "Oyster Bay (SS):203-Dabob Bay (HC):186"  "0.0856947061197338"
+    ## [10,] "Dabob Bay (HC):209-Dabob Bay (HC):186"   "0.0856947061197337"
+    ## [11,] "Fidalgo Bay (NF):209-Dabob Bay (HC):186" "0.0856947061197332"
+    ## [12,] "Fidalgo Bay (NF):210-Dabob Bay (HC):186" "0.0856947061197335"
 
 ``` r
 y <- data.frame(TukeyHSD(x)$'CalDay')
@@ -476,11 +494,11 @@ cbind(rownames(y)[which(y$p.adj <0.1)], y$p.adj[which(y$p.adj <0.1)])
 ```
 
     ##      [,1]      [,2]                
-    ## [1,] "203-180" "0.0639390592341693"
-    ## [2,] "205-180" "0.09824728724486"  
+    ## [1,] "203-180" "0.0639390592341695"
+    ## [2,] "205-180" "0.0982472872448601"
     ## [3,] "209-180" "0.0527954385264705"
-    ## [4,] "203-198" "0.0943079377130277"
-    ## [5,] "209-198" "0.0787914381531722"
+    ## [4,] "203-198" "0.0943079377130278"
+    ## [5,] "209-198" "0.0787914381531724"
 
 Checking for normal distribution
 --------------------------------
