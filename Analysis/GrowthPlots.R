@@ -39,12 +39,12 @@ Fig.L <- ggplot(G1.all.mean, aes(x=Date, y=mean.Length, group=Population)) +
   #                                size = 14, 
   #                                hjust = 0))
 Fig.Lcolor <- Fig.L + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
-png(filename = "Larvae_Length_Line_PS215_color.png", width = 700, height = 400)
+jpeg(filename = "Larvae_Length_Line_PS215_color.jpeg", width = 700, height = 400)
 Fig.Lcolor
 dev.off()
 
 Fig.L <- Fig.L + scale_color_grey()
-png(filename = "Larvae_Length_Line_PS215_bw.png",width = 700, height = 400)
+jpeg(filename = "Larvae_Length_Line_PS215_bw.jpeg",width = 700, height = 400)
 Fig.L
 dev.off()
 
@@ -92,12 +92,12 @@ Fig.Line.area <- ggplot(Shell.Size, aes(x=Day, y=mean.Area, group=Population)) +
                                   size = 20, 
                                   hjust = 0))
 Fig.Line.color <- Fig.Line.area + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
-png(filename = "Juvenile_Area_Line_PS215_color.png")
+jpeg(filename = "Juvenile_Area_Line_PS215_color.jpeg")
 Fig.Line.color
 dev.off()
 
 Fig.Line.bw <- Fig.Line.area + scale_color_grey()
-png(filename = "Juvenile_Area_Line_PS215_bw.png")
+jpeg(filename = "Juvenile_Area_Line_PS215_bw.jpeg")
 Fig.Line.bw
 dev.off()
 
@@ -123,12 +123,12 @@ theme_bw() + #Set the background color
                                   hjust = 0))
 
 Fig.Growth.color <- Fig.Growth.size + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
-png(filename = "Juvenile_Growth_Line_PS215_color.png")
+jpeg(filename = "Juvenile_Growth_Line_PS215_color.jpeg")
 Fig.Growth.color
 dev.off()
 
 Fig.Growth.bw <- Fig.Growth.size + scale_color_grey()
-png(filename = "Juvenile_Growth_Line_PS215_bw.png")
+jpeg(filename = "Juvenile_Growth_Line_PS215_bw.jpeg")
 Fig.Growth.bw
 dev.off()
 
@@ -145,6 +145,6 @@ Bar.size <- ggplot(SS, aes(x=Day, y=mean.Growth, fill=Population)) +
   scale_fill_manual(values=c("#999999","#56B4E9","#E69F00" )) + 
   scale_x_discrete(labels = c("48" ="0 - 48","68" = "48 - 68"))
 
-png(filename = "Juvenile_Growth_Bar_PS215_color.png")
+jpeg(filename = "Juvenile_Growth_Bar_PS215_color.jpeg")
 Bar.size
 dev.off()
