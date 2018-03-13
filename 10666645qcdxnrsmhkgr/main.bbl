@@ -1,0 +1,352 @@
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname doiprefix\endcsname\relax\def\doiprefix{DOI }\fi
+\providecommand{\bibinfo}[2]{#2}
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem{Kawecki2004-qo}
+\bibinfo{author}{Kawecki, T.~J.} \& \bibinfo{author}{Ebert, D.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Conceptual issues in local
+  adaptation}}.
+\newblock {\emph{\JournalTitle{Ecol. Lett.}}} \textbf{\bibinfo{volume}{7}},
+  \bibinfo{pages}{1225--1241} (\bibinfo{year}{2004}).
+
+\bibitem{Grosberg2001-tv}
+\bibinfo{author}{Grosberg, R.} \& \bibinfo{author}{Cunningham, C.~W.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Genetic structure in the sea}}.
+\newblock {\emph{\JournalTitle{Marine community ecology. Sinauer, Sunderland,
+  MA}}} \bibinfo{pages}{61--84} (\bibinfo{year}{2001}).
+
+\bibitem{Marshall2010-lc}
+\bibinfo{author}{Marshall, D.~J.}, \bibinfo{author}{Monro, K.},
+  \bibinfo{author}{Bode, M.}, \bibinfo{author}{Keough, M.~J.} \&
+  \bibinfo{author}{Swearer, S.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Phenotype--environment mismatches
+  reduce connectivity in the sea}}.
+\newblock {\emph{\JournalTitle{Ecol. Lett.}}} \textbf{\bibinfo{volume}{13}},
+  \bibinfo{pages}{128--140} (\bibinfo{year}{2010}).
+
+\bibitem{Schmidt2001-ex}
+\bibinfo{author}{Schmidt, P.~S.} \& \bibinfo{author}{Rand, D.~M.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Adaptive maintenance of genetic
+  polymorphism in an intertidal barnacle: habitat- and life-stage-specific
+  survivorship of mpi genotypes}}.
+\newblock {\emph{\JournalTitle{Evolution}}} \textbf{\bibinfo{volume}{55}},
+  \bibinfo{pages}{1336--1344} (\bibinfo{year}{2001}).
+
+\bibitem{Baums2008-od}
+\bibinfo{author}{Baums, I.~B.}
+\newblock \bibinfo{journal}{\bibinfo{title}{A restoration genetics guide for
+  coral reef conservation}}.
+\newblock {\emph{\JournalTitle{Molecular Ecology}}}
+  \textbf{\bibinfo{volume}{17}}, \bibinfo{pages}{2796--2811}
+  (\bibinfo{year}{2008}).
+
+\bibitem{Carroll2014-ts}
+\bibinfo{author}{Carroll, S.~P.} \emph{et~al.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Applying evolutionary biology to
+  address global challenges}}.
+\newblock {\emph{\JournalTitle{Science}}} \textbf{\bibinfo{volume}{346}}
+  (\bibinfo{year}{2014}).
+
+\bibitem{West-Eberhard2003-ja}
+\bibinfo{author}{West-Eberhard, M.~J.}
+\newblock \emph{\bibinfo{title}{Developmental Plasticity and Evolution}}
+  (\bibinfo{publisher}{Oxford University Press}, \bibinfo{year}{2003}).
+
+\bibitem{Teplitsky2008-fe}
+\bibinfo{author}{Teplitsky, C.}, \bibinfo{author}{Mills, J.~A.},
+  \bibinfo{author}{Alho, J.~S.}, \bibinfo{author}{Yarrall, J.~W.} \&
+  \bibinfo{author}{Meril{\"a}, J.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Bergmann's rule and climate change
+  revisited: disentangling environmental and genetic responses in a wild bird
+  population}}.
+\newblock {\emph{\JournalTitle{Proc. Natl. Acad. Sci. U. S. A.}}}
+  \textbf{\bibinfo{volume}{105}}, \bibinfo{pages}{13492--13496}
+  (\bibinfo{year}{2008}).
+
+\bibitem{Conover2006-tk}
+\bibinfo{author}{Conover, D.~O.}, \bibinfo{author}{Clarke, L.~M.},
+  \bibinfo{author}{Munch, S.~B.} \& \bibinfo{author}{Wagner, G.~N.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Spatial and temporal scales of
+  adaptive divergence in marine fishes and the implications for conservation}}.
+\newblock {\emph{\JournalTitle{J. Fish Biol.}}} \textbf{\bibinfo{volume}{69}},
+  \bibinfo{pages}{21--47} (\bibinfo{year}{2006}).
+
+\bibitem{Pepin1991-ja}
+\bibinfo{author}{Pepin, P.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Effect of temperature and size on
+  development, mortality, and survival rates of the pelagic early life history
+  stages of marine fish}}.
+\newblock {\emph{\JournalTitle{Can. J. Fish. Aquat. Sci.}}}
+  \textbf{\bibinfo{volume}{48}}, \bibinfo{pages}{503--518}
+  (\bibinfo{year}{1991}).
+
+\bibitem{Padilla2013-th}
+\bibinfo{author}{Padilla, D.~K.} \& \bibinfo{author}{Savedo, M.~M.}
+\newblock \bibinfo{journal}{\bibinfo{title}{A systematic review of phenotypic
+  plasticity in marine invertebrate and plant systems}}.
+\newblock {\emph{\JournalTitle{Adv. Mar. Biol.}}}
+  \textbf{\bibinfo{volume}{65}}, \bibinfo{pages}{67--94}
+  (\bibinfo{year}{2013}).
+
+\bibitem{Guillaume2016-vu}
+\bibinfo{author}{Guillaume, A.~S.}, \bibinfo{author}{Monro, K.} \&
+  \bibinfo{author}{Marshall, D.~J.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Transgenerational plasticity and
+  environmental stress: do paternal effects act as a conduit or a buffer?}}
+\newblock {\emph{\JournalTitle{Funct. Ecol.}}} \textbf{\bibinfo{volume}{30}},
+  \bibinfo{pages}{1175--1184} (\bibinfo{year}{2016}).
+
+\bibitem{Hercus2000-ai}
+\bibinfo{author}{Hercus, M.~J.} \& \bibinfo{author}{Hoffmann, A.~A.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Maternal and grandmaternal age
+  influence offspring fitness in drosophila}}.
+\newblock {\emph{\JournalTitle{Proc. Biol. Sci.}}}
+  \textbf{\bibinfo{volume}{267}}, \bibinfo{pages}{2105--2110}
+  (\bibinfo{year}{2000}).
+
+\bibitem{Sanford2011-fy}
+\bibinfo{author}{Sanford, E.} \& \bibinfo{author}{Kelly, M.~W.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Local adaptation in marine
+  invertebrates}}.
+\newblock {\emph{\JournalTitle{Ann. Rev. Mar. Sci.}}}
+  \textbf{\bibinfo{volume}{3}}, \bibinfo{pages}{509--535}
+  (\bibinfo{year}{2011}).
+
+\bibitem{Salinas2013-ry}
+\bibinfo{author}{Salinas, S.}, \bibinfo{author}{Brown, S.~C.},
+  \bibinfo{author}{Mangel, M.} \& \bibinfo{author}{Munch, S.~B.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Non-genetic inheritance and
+  changing environments}}.
+\newblock {\emph{\JournalTitle{Non-Genetic Inheritance}}}
+  \textbf{\bibinfo{volume}{1}} (\bibinfo{year}{2013}).
+
+\bibitem{Parker2013-xg}
+\bibinfo{author}{Parker, L.~M.} \emph{et~al.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Predicting the response of molluscs
+  to the impact of ocean acidification}}.
+\newblock {\emph{\JournalTitle{Biology}}} \textbf{\bibinfo{volume}{2}},
+  \bibinfo{pages}{651--692} (\bibinfo{year}{2013}).
+
+\bibitem{Byrne2011-hk}
+\bibinfo{author}{Byrne, M.}
+\newblock \bibinfo{title}{Impact of ocean warming and ocean acidification on
+  marine invertebrate life history stages}.
+\newblock In \emph{\bibinfo{booktitle}{Oceanography and Marine Biology}},
+  Oceanography and Marine Biology - An Annual Review (\bibinfo{publisher}{CRC
+  Press}, \bibinfo{year}{2011}).
+
+\bibitem{Ross2016-en}
+\bibinfo{author}{Ross, P.~M.}, \bibinfo{author}{Parker, L.} \&
+  \bibinfo{author}{Byrne, M.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Transgenerational responses of
+  molluscs and echinoderms to changing ocean conditions}}.
+\newblock {\emph{\JournalTitle{ICES J. Mar. Sci.}}}
+  \textbf{\bibinfo{volume}{73}}, \bibinfo{pages}{537--549}
+  (\bibinfo{year}{2016}).
+
+\bibitem{Kuo2009-co}
+\bibinfo{author}{Kuo, E. S.~L.} \& \bibinfo{author}{Sanford, E.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Geographic variation in the upper
+  thermal limits of an intertidal snail: Implications for climate envelope
+  models}}.
+\newblock {\emph{\JournalTitle{Mar. Ecol. Prog. Ser.}}}
+  \textbf{\bibinfo{volume}{388}}, \bibinfo{pages}{137--146}
+  (\bibinfo{year}{2009}).
+
+\bibitem{Palmer1994-nw}
+\bibinfo{author}{Palmer, A.~R.}
+\newblock \bibinfo{title}{Temperature sensitivity, rate of development, and
+  time to maturity: Geographic variation in {Laboratory-Reared} nucella and a
+  {Cross-Phyletic} overview}.
+\newblock In \bibinfo{editor}{{Wilson, W H Stricker, S A}} (ed.)
+  \emph{\bibinfo{booktitle}{Reproduction and Development of Marine
+  Invertebrates}}, \bibinfo{pages}{177--194} (\bibinfo{publisher}{Johns Hopkins
+  University Press}, \bibinfo{year}{1994}).
+
+\bibitem{Sanford2010-df}
+\bibinfo{author}{Sanford, E.} \& \bibinfo{author}{Worth, D.~J.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Local adaptation along a continuous
+  coastline: prey recruitment drives differentiation in a predatory snail}}.
+\newblock {\emph{\JournalTitle{Ecology}}} \textbf{\bibinfo{volume}{91}},
+  \bibinfo{pages}{891--901} (\bibinfo{year}{2010}).
+
+\bibitem{Dittman1998-xm}
+\bibinfo{author}{Dittman, D.}, \bibinfo{author}{Ford, S.~E.} \&
+  \bibinfo{author}{Haskin, H.~H.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Growth patterns in oysters,
+  crassostrea virginica, from different estuaries}}.
+\newblock {\emph{\JournalTitle{Marine Biology}}}
+  \textbf{\bibinfo{volume}{132}}, \bibinfo{pages}{461--469}
+  (\bibinfo{year}{1998}).
+
+\bibitem{Bible2016-rb}
+\bibinfo{author}{Bible, J.~M.} \& \bibinfo{author}{Sanford, E.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Local adaptation in an estuarine
+  foundation species: Implications for restoration}}.
+\newblock {\emph{\JournalTitle{Biol. Conserv.}}}
+  \textbf{\bibinfo{volume}{193}}, \bibinfo{pages}{95--102}
+  (\bibinfo{year}{2016}).
+
+\bibitem{Coe1932-nq}
+\bibinfo{author}{Coe, W.~R.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Development of the gonads and the
+  sequence of the sexual phases in the california oyster (ostrea lurida)}}.
+\newblock {\emph{\JournalTitle{Scripps Institution of Oceanography}}}
+  (\bibinfo{year}{1932}).
+
+\bibitem{Ruesink2005-lt}
+\bibinfo{author}{Ruesink, J.~L.} \emph{et~al.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Introduction of {Non-Native}
+  oysters: Ecosystem effects and restoration implications}}.
+\newblock {\emph{\JournalTitle{Annu. Rev. Ecol. Evol. Syst.}}}
+  \textbf{\bibinfo{volume}{36}}, \bibinfo{pages}{643--689}
+  (\bibinfo{year}{2005}).
+
+\bibitem{Blake2012-ln}
+\bibinfo{author}{Blake, B.} \& \bibinfo{author}{Bradbury, A.}
+\newblock \bibinfo{title}{Washington department of fish and wildlife plan for
+  rebuilding olympia oyster (ostrea lurida) populations in puget sound with a
+  historical and contemporary overview}.
+\newblock \bibinfo{type}{Tech. Rep.}, \bibinfo{institution}{Washington
+  Department of Fish and Wildlife}, \bibinfo{address}{Brinnon, WA}
+  (\bibinfo{year}{2012}).
+
+\bibitem{Hettinger2013-od}
+\bibinfo{author}{Hettinger, A.} \emph{et~al.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Larval carry-over effects from
+  ocean acidification persist in the natural environment}}.
+\newblock {\emph{\JournalTitle{Glob. Chang. Biol.}}}
+  \textbf{\bibinfo{volume}{19}}, \bibinfo{pages}{3317--3326}
+  (\bibinfo{year}{2013}).
+
+\bibitem{Camara2009-sn}
+\bibinfo{author}{Camara, M.~D.} \& \bibinfo{author}{Vadopalas, B.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Genetic aspects of restoring
+  olympia oysters and other native bivalves: Balancing the need for action,
+  good intentions, and the risks of making things worse}}.
+\newblock {\emph{\JournalTitle{Journal of Shellfish Research}}}
+  \textbf{\bibinfo{volume}{28}}, \bibinfo{pages}{121--145}
+  (\bibinfo{year}{2009}).
+
+\bibitem{Heare2017-uv}
+\bibinfo{author}{Heare, J.~E.}, \bibinfo{author}{Blake, B.},
+  \bibinfo{author}{Davis, J.~P.}, \bibinfo{author}{Vadopalas, B.} \&
+  \bibinfo{author}{Roberts, S.~B.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Evidence of ostrea lurida
+  (carpenter 1864) population structure in puget sound, {WA}}}.
+\newblock {\emph{\JournalTitle{Marine Ecology}}}  (\bibinfo{year}{2017}).
+
+\bibitem{Barber1991-og}
+\bibinfo{author}{Barber, B.~J.}, \bibinfo{author}{Ford, S.~E.} \&
+  \bibinfo{author}{Wargo, R.~N.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Genetic variation in the timing of
+  gonadal maturation and spawning of the eastern oyster, crassostrea virginica
+  (gmelin)}}.
+\newblock {\emph{\JournalTitle{Biol. Bull.}}} \textbf{\bibinfo{volume}{181}},
+  \bibinfo{pages}{216--221} (\bibinfo{year}{1991}).
+
+\bibitem{Barber2016-ws}
+\bibinfo{author}{Barber, J.~S.}, \bibinfo{author}{Dexter, J.~E.},
+  \bibinfo{author}{Grossman, S.~K.}, \bibinfo{author}{Greiner, C.~M.} \&
+  \bibinfo{author}{Mcardle, J.~T.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Low temperature brooding of olympia
+  oysters ( ostrea lurida ) in northern puget sound}}.
+\newblock {\emph{\JournalTitle{J. Shellfish Res.}}}
+  \textbf{\bibinfo{volume}{35}}, \bibinfo{pages}{351--357}
+  (\bibinfo{year}{2016}).
+
+\bibitem{Seale2009-uw}
+\bibinfo{author}{Seale, E.~M.} \& \bibinfo{author}{Zacherl, D.~C.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Seasonal settlement of olympia
+  oyster larvae, ostrea lurida carpenter 1864 and its relationship to seawater
+  temperature in two southern california estuaries}}.
+\newblock {\emph{\JournalTitle{J. Shellfish Res.}}}  (\bibinfo{year}{2009}).
+
+\bibitem{Palumbi1994-rv}
+\bibinfo{author}{Palumbi, S.~R.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Genetic divergence, reproductive
+  isolation, and marine speciation}}.
+\newblock {\emph{\JournalTitle{Annu. Rev. Ecol. Syst.}}}
+  \textbf{\bibinfo{volume}{25}}, \bibinfo{pages}{547--572}
+  (\bibinfo{year}{1994}).
+
+\bibitem{Perrin1993-wa}
+\bibinfo{author}{Perrin, N.}, \bibinfo{author}{Sibly, R.~M.} \&
+  \bibinfo{author}{Nichols, N.~K.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Optimal growth strategies when
+  mortality and production rates are size-dependent}}.
+\newblock {\emph{\JournalTitle{Evol. Ecol.}}} \textbf{\bibinfo{volume}{7}},
+  \bibinfo{pages}{576--592} (\bibinfo{year}{1993}).
+
+\bibitem{Folkvord2014-jj}
+\bibinfo{author}{Folkvord, A.} \emph{et~al.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Trade-offs between growth and
+  reproduction in wild atlantic cod}}.
+\newblock {\emph{\JournalTitle{Can. J. Fish. Aquat. Sci.}}}
+  \textbf{\bibinfo{volume}{71}}, \bibinfo{pages}{1106--1112}
+  (\bibinfo{year}{2014}).
+
+\bibitem{Heino1999-fb}
+\bibinfo{author}{{Heino}} \& \bibinfo{author}{{Kaitala}}.
+\newblock \bibinfo{journal}{\bibinfo{title}{Evolution of resource allocation
+  between growth and reproduction in animals with indeterminate growth}}.
+\newblock {\emph{\JournalTitle{J. Evol. Biol.}}} \textbf{\bibinfo{volume}{12}},
+  \bibinfo{pages}{423--429} (\bibinfo{year}{1999}).
+
+\bibitem{Pontarp2015-oc}
+\bibinfo{author}{Pontarp, M.}, \bibinfo{author}{Johansson, J.},
+  \bibinfo{author}{Jonz{\'e}n, N.} \& \bibinfo{author}{Lundberg, P.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Adaptation of timing of life
+  history traits and population dynamic responses to climate change in
+  spatially structured populations}}.
+\newblock {\emph{\JournalTitle{Evol. Ecol.}}} \textbf{\bibinfo{volume}{29}},
+  \bibinfo{pages}{565--579} (\bibinfo{year}{2015}).
+
+\bibitem{Carson2010-xi}
+\bibinfo{author}{Carson, H.~S.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Population connectivity of the
+  olympia oyster in southern california}}.
+\newblock {\emph{\JournalTitle{Limnol. Oceanogr.}}}
+  \textbf{\bibinfo{volume}{55}}, \bibinfo{pages}{134--148}
+  (\bibinfo{year}{2010}).
+
+\bibitem{Jones2013-pe}
+\bibinfo{author}{Jones, T.~A.}
+\newblock \bibinfo{journal}{\bibinfo{title}{When local isn't best}}.
+\newblock {\emph{\JournalTitle{Evol. Appl.}}} \textbf{\bibinfo{volume}{6}},
+  \bibinfo{pages}{1109--1118} (\bibinfo{year}{2013}).
+
+\bibitem{McClure2008-al}
+\bibinfo{author}{McClure, M.~M.} \emph{et~al.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Evolutionary effects of alternative
+  artificial propagation programs: implications for viability of endangered
+  anadromous salmonids}}.
+\newblock {\emph{\JournalTitle{Evol. Appl.}}} \textbf{\bibinfo{volume}{1}},
+  \bibinfo{pages}{356--375} (\bibinfo{year}{2008}).
+
+\bibitem{Schneider2012-js}
+\bibinfo{author}{Schneider, C.~A.}, \bibinfo{author}{Rasband, W.~S.} \&
+  \bibinfo{author}{Eliceiri, K.~W.}
+\newblock \bibinfo{journal}{\bibinfo{title}{{NIH} image to {ImageJ}: 25 years
+  of image analysis}}.
+\newblock {\emph{\JournalTitle{Nat. Methods}}} \textbf{\bibinfo{volume}{9}},
+  \bibinfo{pages}{671--675} (\bibinfo{year}{2012}).
+
+\bibitem{Bates2015-ky}
+\bibinfo{author}{Bates, D.}, \bibinfo{author}{M{\"a}chler, M.},
+  \bibinfo{author}{Bolker, B.} \& \bibinfo{author}{Walker, S.}
+\newblock \bibinfo{journal}{\bibinfo{title}{Fitting linear {Mixed-Effects}
+  models using lme4}}.
+\newblock {\emph{\JournalTitle{Journal of Statistical Software, Articles}}}
+  \textbf{\bibinfo{volume}{67}}, \bibinfo{pages}{1--48} (\bibinfo{year}{2015}).
+
+\bibitem{Pohlert2014-lr}
+\bibinfo{author}{Pohlert, T.}
+\newblock \bibinfo{title}{The pairwise multiple comparison of mean ranks
+  package ({PMCMR})} (\bibinfo{year}{2014}).
+
+\end{thebibliography}
