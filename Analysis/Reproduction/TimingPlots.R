@@ -9,7 +9,7 @@ library("grid")#plotting
 library(gridExtra) #plotting
 library(scales) #plotting
 
-larvae = read.csv("../../Data/Larval counts - Day 1-By Family.csv", header = TRUE)
+larvae = read.csv("../Data/Larval counts - Day 1-By Family.csv", header = TRUE)
 larvae$Population <- gsub("\\s{1}\\(HC\\)","",larvae$Population)
 larvae$Population <- gsub("\\s{1}\\(SS\\)","",larvae$Population)
 larvae$Population <- gsub("\\s{1}\\(NF\\)","",larvae$Population)
@@ -75,7 +75,7 @@ tc.plot <- ggplot(fam.sum, aes(x=Population, y=total.percap,fill=Population)) +
   geom_boxplot(width=0.05,fill="white") + 
   labs(title="Cumulative Larvae",y=expression("Cumulative Larvae")) + 
   theme_bw(base_size = 16)+
-  theme(title = element_text(size = 18)) + scale_y_continuous(label=comma)
+  theme(plot.title = element_text(face = 'bold',size = 20, hjust = 0)) + scale_y_continuous(label=comma)
 
 #First day of larval release violin plots, with bucket as replicate
 fd.plot <- ggplot(fam.sum, aes(x=Population, y=first.big,fill=Population)) + 
@@ -84,7 +84,7 @@ fd.plot <- ggplot(fam.sum, aes(x=Population, y=first.big,fill=Population)) +
   geom_boxplot(width=0.05,fill="white") + 
   labs(title="Date of First Larval Release",y="Calendar Day") + 
   theme_bw(base_size = 16)+
-  theme(title = element_text(size = 18))
+  theme(plot.title = element_text(face = 'bold',size = 20, hjust = 0))
 
 tc.plot <- tc.plot + theme(legend.position="none",legend.text = element_text(size = 18)) + labs(title="a. Cumulative Larvae") + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
 fd.plot <- fd.plot + labs(title="b. Date of First Larval Release") + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
