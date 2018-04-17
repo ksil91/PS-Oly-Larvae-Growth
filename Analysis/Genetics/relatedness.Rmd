@@ -1,0 +1,194 @@
+---
+title: "Relatedness and Heterozygosity of Puget Sound F1 oysters"
+output:
+  github_document:
+    toc: yes
+  html_notebook:
+    fig_height: 3
+    fig_width: 4
+---
+ 
+```{r, message=F}
+library(dplyr)
+library(hierfstat)
+library(radiator)
+```
+#Genetic Diversity
+Create genind objects for each population using Therry Gosselin's [radiator](https://rdrr.io/github/thierrygosselin/radiator/man/vcf2hierfstat.html) package. Excluding SNPs that are singletons in the entire dataset.
+```{r}
+HC <- vcf2hierfstat("../../Data/o15final90-m75.recode.vcf",common.markers = FALSE,strata = "o15_three.strata",pop.select = "HC",parallel.core = 2)
+
+SS <- vcf2hierfstat("../../Data/o15final90-m75.recode.vcf",common.markers = FALSE,strata = "o15_three.strata",pop.select = "SS",parallel.core = 2)
+
+NF <- vcf2hierfstat("../../Data/o15final90-m75.recode.vcf",common.markers = FALSE,strata = "o15_three.strata",pop.select = "NF",parallel.core = 2)
+```
+Observed and expected heterozygosity with *hierfstat*.  
+
+##Hood Canal population
+
+```{r}
+HC_basic <- basic.stats(HC$hierfstat.no.imputation,digits = 6)
+plot(HC_basic$Ho[,1], xlab="Loci number", ylab="Observed Heterozygosity", 
+     main="Observed heterozygosity per locus - HC")
+HC_basic$overall
+```
+Does observed heterozygosity differ significantly from expected?
+
+```{r}
+plot(HC_basic$Ho,HC_basic$Hs, xlab="Hobs", ylab="Hexp", 
+     main="Expected heterozygosity as a function of observed heterozygosity per locus- HC")
+bartlett.test(list(HC_basic$Hs, HC_basic$Ho))
+```
+Yes, observed heterozygosity is generally lower than expected.  
+
+##Oyster Bay population
+
+```{r}
+SS_basic <- basic.stats(SS$hierfstat.no.imputation)
+plot(SS_basic$Ho[,1], xlab="Loci number", ylab="Observed Heterozygosity", 
+     main="Observed heterozygosity per locus - SS")
+SS_basic$overall
+```
+Does observed heterozygosity differ significantly from expected?
+
+```{r}
+plot(SS_basic$Ho,SS_basic$Hs, xlab="Hobs", ylab="Hexp", 
+     main="Expected heterozygosity as a function of observed heterozygosity per locus- SS")
+bartlett.test(list(SS_basic$Hs, SS_basic$Ho))
+```
+##Fidalgo Bay population
+
+```{r}
+NF_basic <- basic.stats(NF$hierfstat.no.imputation)
+plot(NF_basic$Ho[,1], xlab="Loci number", ylab="Observed Heterozygosity", 
+     main="Observed heterozygosity per locus - NF")
+NF_basic$overall
+```
+
+```{r}
+plot(NF_basic$Ho,NF_basic$Hs, xlab="Hobs", ylab="Hexp", 
+     main="Expected heterozygosity as a function of observed heterozygosity per locus- NF")
+bartlett.test(list(NF_basic$Hs, NF_basic$Ho))
+```
+
+#Relatedness  
+Run relatedness2 function through VCFtools for each of the threee populations, using SNPs that are polymorphic in each population. Takes as input a VCF file and a list of the samples within each population.
+```{r, message=FALSE}
+system('vcftools --vcf ../../Data/o15final90-m75.recode.vcf --keep HC15.pop --mac 1 --relatedness2 --out HC-o15final90-mac1-m75')
+
+system('vcftools --vcf ../../Data/o15final90-m75.recode.vcf --keep SS15.pop --mac 1 --relatedness2 --out SS-o15final90-mac1-m75')
+
+system('vcftools --vcf ../../Data/o15final90-m75.recode.vcf --keep NF15.pop --mac 1 --relatedness2 --out NF-o15final90-mac1-m75')
+```
+
+## Oyster Bay  
+Read in output and filter out pairwise comparision with self and duplicate pairwise combinations.
+```{r}
+relate2SS <- read.table(file = "SS-o15final90-mac1-m75.relatedness2",header = T)
+relate2SS <- select(relate2SS,INDV1,INDV2,RELATEDNESS_PHI)
+head(relate2SS)
+```
+
+```{r}
+#Remove comparisions with self
+relate2SS.noself <- filter(relate2SS, INDV1 != INDV2)
+
+#Remove duplicate comparisions
+relate2SS.noreps <- relate2SS.noself[!duplicated(t(apply(relate2SS.noself,1,sort))),]
+
+plot(relate2SS.noreps$INDV1, relate2SS.noreps$RELATEDNESS_PHI, xlab="INDV1", ylab="PHI values",main="All PHI values", las=2)
+
+#Set all negative values to 0. Extreme negative values *can* indicate that the two individuals are from different populations, but these are all generally low frequency.
+relate2SS.noreps <- mutate(relate2SS.noreps, trun_phi = ifelse(RELATEDNESS_PHI < 0, 0, RELATEDNESS_PHI))
+head(relate2SS.noreps)
+```
+Get the number of pairwise comparisions that conservatively may be Full Sibs, based on Relationship inference criteria from Manichaikul et al. 2010 Bioinformatics.
+```{r}
+##Mean relatedness
+mean(relate2SS.noreps$trun_phi)
+```
+```{r}
+##Number of Full Sib comparisions
+sum(relate2SS.noreps$RELATEDNESS_PHI >= 0.18)
+```
+```{r}
+##Proportion of full sib comparisions
+sum(relate2SS.noreps$RELATEDNESS_PHI >= 0.18)/nrow(relate2SS.noreps)
+```
+```{r}
+##Proportion related individuals
+length(unique(relate2SS.noself[which(relate2SS.noself$RELATEDNESS_PHI>=0.18),1]))/length(unique(relate2SS.noself[,1]))
+```
+
+```{r}
+plot(density(relate2SS.noreps$trun_phi))
+plot(relate2SS.noreps$INDV1, relate2SS.noreps$trun_phi, xlab="INDV1", ylab="Truncated PHI values",main="Truncated PHI values", las=2)
+```
+
+## Dabob Bay  
+```{r, echo=F}
+relate2HC <- read.table(file = "HC-o15final90-mac1-m75.relatedness2",header = T)
+relate2HC <- select(relate2HC,INDV1,INDV2,RELATEDNESS_PHI) 
+relate2HC.noself <- filter(relate2HC,INDV1 != INDV2)
+relate2HC.noreps <- relate2HC.noself[!duplicated(t(apply(relate2HC.noself,1,sort))),]
+relate2HC.noreps <- mutate(relate2HC.noreps, trun_phi = ifelse(RELATEDNESS_PHI < 0, 0, RELATEDNESS_PHI))
+```
+
+```{r}
+##Mean relatedness
+mean(relate2HC.noreps$trun_phi)
+```
+```{r}
+##Number of Full Sib comparisions
+sum(relate2HC.noreps$RELATEDNESS_PHI >= 0.18)
+```
+```{r}
+##Proportion of full sib comparisions
+sum(relate2HC.noreps$RELATEDNESS_PHI >= 0.18)/nrow(relate2HC.noreps)
+```
+```{r}
+##Proportion related individuals
+length(unique(relate2HC.noself[which(relate2HC.noself$RELATEDNESS_PHI>=0.18),1]))/length(unique(relate2HC.noself[,1]))
+```
+
+```{r}
+plot(density(relate2HC.noreps$trun_phi))
+plot(relate2HC.noreps$INDV1, relate2HC.noreps$trun_phi, xlab="INDV1", ylab="Truncated PHI values",main="Truncated PHI values", las=2)
+```
+
+## Fidalgo Bay
+```{r, echo=F}
+relate2NF <- read.table(file = "NF-o15final90-mac1-m75.relatedness2",header = T)
+relate2NF <- select(relate2NF,INDV1,INDV2,RELATEDNESS_PHI) 
+relate2NF.noself <- filter(relate2NF,INDV1 != INDV2)
+relate2NF.noreps <- relate2NF.noself[!duplicated(t(apply(relate2NF.noself,1,sort))),]
+relate2NF.noreps <- mutate(relate2NF.noreps, trun_phi = ifelse(RELATEDNESS_PHI < 0, 0, RELATEDNESS_PHI))
+```
+
+```{r}
+##Mean relatedness
+mean(relate2NF.noreps$trun_phi)
+```
+```{r}
+##Number of Full Sib comparisions
+sum(relate2NF.noreps$RELATEDNESS_PHI >= 0.18)
+```
+```{r}
+##Proportion of full sib comparisions
+sum(relate2NF.noreps$RELATEDNESS_PHI >= 0.18)/nrow(relate2NF.noreps)
+```
+```{r}
+##Proportion related individuals
+length(unique(relate2NF.noself[which(relate2NF.noself$RELATEDNESS_PHI>=0.18),1]))/length(unique(relate2NF.noself[,1]))
+```
+```{r}
+plot(density(relate2NF.noreps$trun_phi))
+plot(relate2NF.noreps$INDV1, relate2NF.noreps$trun_phi, xlab="INDV1", ylab="Truncated PHI values",main="Truncated PHI values", las=2)
+```
+## Together
+```{r}
+plot(density(relate2SS.noreps$trun_phi), ylim = c(0,35), xlim= c(-0.05,0.4),main = "Distribution of F1 Kinship Estimates", xlab = "Relatedness", col = "#56B4E9")
+lines(density(relate2HC.noreps$trun_phi), col = "#999999")
+lines(density(relate2NF.noreps$trun_phi), col = "#E69F00")
+legend("right",c("Oyster Bay","Dabob Bay","Fidalgo Bay"),fill = c("#56B4E9","#999999","#E69F00"))
+```

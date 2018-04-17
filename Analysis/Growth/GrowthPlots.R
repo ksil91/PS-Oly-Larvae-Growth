@@ -140,7 +140,7 @@ Bar.size <- ggplot(SS, aes(x=Day, y=mean.Growth, fill=Population)) +
   ylab(expression(paste('Shell Area (',mm^2,') /day'))) +
   ggtitle("Juvenile Shell Area Growth Rate") +
   #theme(plot.title = element_text(face = 'bold', size = 14, hjust = 0)) 
-  theme(plot.title = element_text(size = 18)) +
+  theme(plot.title = element_text(face = 'bold',size = 18)) +
   geom_errorbar(aes(ymin=SS$mean.Growth-SS$se.Growth,ymax=SS$mean.Growth+SS$se.Growth), width=.07,position = position_dodge(0.9)) +
   scale_fill_manual(values=c("#999999","#56B4E9","#E69F00" )) + 
   scale_x_discrete(labels = c("48" ="0 - 48","68" = "48 - 68"))
